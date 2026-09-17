@@ -180,20 +180,6 @@ Canvas
 - [ ] Veikt gala testēšanu
 - [ ] Novērst atlikušās kļūdas
 
-## Ekrānšāviņi
-
-### Spēles laukums
-
-![Spēles laukums](docs/screenshots/gameplay.png)
-
-### Unity Hierarchy
-
-![Unity Hierarchy](docs/screenshots/unity-hierarchy.png)
-
-### Unity Inspector
-
-![Unity Inspector](docs/screenshots/unity-inspector.png)
-
 ## Projekta statuss
 
 Projekts atrodas izstrādes procesā. Spēles galvenā mehānika, transportlīdzekļu pārvietošana, objektu pārveidošana, pareizās vietas pārbaude un nejaušā objektu izvietošana tiek izstrādāta vienotā sistēmā.
