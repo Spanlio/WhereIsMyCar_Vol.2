@@ -427,7 +427,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -449,6 +449,7 @@ RectTransform:
   - {fileID: 1912445430}
   - {fileID: 651377695}
   - {fileID: 2079289961}
+  - {fileID: 231902599}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -833,6 +834,41 @@ RectTransform:
   m_AnchoredPosition: {x: 315, y: -284}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &231902598
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 231902599}
+  m_Layer: 5
+  m_Name: spawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &231902599
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 231902598}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 78528970}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 960, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &237050938
 GameObject:
   m_ObjectHideFlags: 0
@@ -1120,6 +1156,7 @@ GameObject:
   - component: {fileID: 449420542}
   - component: {fileID: 449420543}
   - component: {fileID: 449420544}
+  - component: {fileID: 449420545}
   m_Layer: 0
   m_Name: ScriptHolder
   m_TagString: Untagged
@@ -1195,6 +1232,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: b53c875c3579ed44c8310c4674206dc9, type: 3}
   - {fileID: 8300000, guid: 2546c2932d0ce6b4f84aa7f537266339, type: 3}
   - {fileID: 8300000, guid: efa1d7e1df9746444a724cbf98118063, type: 3}
+  - {fileID: 8300000, guid: 480aa74224035844cada1c9007ab938d, type: 3}
+  - {fileID: 8300000, guid: 779fe27f005f5d845afab62245b6fd36, type: 3}
   inRightPlace: 0
   carsContainer: {fileID: 1912445430}
   placesContainer: {fileID: 2019437108}
@@ -1233,6 +1272,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameObjectsScript: {fileID: 0}
+--- !u!114 &449420545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 449420540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dfe321241736c141ba0a79d7227aa9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cloudPrefabs:
+  - {fileID: 1973544003872700676, guid: 0c500596fd52a9e49bc9506d03f9c5b3, type: 3}
+  - {fileID: 4545241813706418208, guid: 66314827549508243a47fc7337c1dc32, type: 3}
+  - {fileID: 14340403785980743, guid: 8be181b551ae53b4d8825b010facbbb8, type: 3}
+  plainPrefabs:
+  - {fileID: 7691069507174795518, guid: 837ca9594d460e54b9c0935689e64fdc, type: 3}
+  - {fileID: 4545241813706418208, guid: 66314827549508243a47fc7337c1dc32, type: 3}
+  - {fileID: 14340403785980743, guid: 8be181b551ae53b4d8825b010facbbb8, type: 3}
+  spawnPoint: {fileID: 231902599}
+  cloudSpawnInterval: 2
+  plainSpawnInterval: 3
+  cloudMinSpeed: 1.5
+  cloudMaxSpeed: 150
+  plainMinSpeed: 2
+  plainMaxSpeed: 100
 --- !u!1 &512005030
 GameObject:
   m_ObjectHideFlags: 0
