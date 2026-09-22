@@ -1234,6 +1234,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: efa1d7e1df9746444a724cbf98118063, type: 3}
   - {fileID: 8300000, guid: 480aa74224035844cada1c9007ab938d, type: 3}
   - {fileID: 8300000, guid: 779fe27f005f5d845afab62245b6fd36, type: 3}
+  musicSource: {fileID: 9521861}
   inRightPlace: 0
   carsContainer: {fileID: 1912445430}
   placesContainer: {fileID: 2019437108}

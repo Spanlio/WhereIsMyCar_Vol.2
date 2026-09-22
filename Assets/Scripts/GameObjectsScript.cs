@@ -61,6 +61,7 @@ public class GameObjectsScript : MonoBehaviour
     public Canvas canvas;
     public AudioSource carSoundSource;
     public AudioClip[] sounds;
+    public AudioSource musicSource;
 
 
     [HideInInspector]
@@ -84,6 +85,8 @@ public class GameObjectsScript : MonoBehaviour
     void Start()
     {
         RandomizeGame();
+
+        ApplySavedAudioSettings();
     }
 
 
@@ -331,5 +334,26 @@ public class GameObjectsScript : MonoBehaviour
 
         ugunsdzesejiCoord =
             ugunsdzeseji.GetComponent<RectTransform>().localPosition;
+    }
+
+    void ApplySavedAudioSettings()
+    {
+        float savedSoundVolume =
+            PlayerPrefs.GetFloat("SoundVolume", 1f);
+
+        float savedMusicVolume =
+            PlayerPrefs.GetFloat("MusicVolume", 0.3f);
+
+
+        if (carSoundSource != null)
+        {
+            carSoundSource.volume = savedSoundVolume;
+        }
+
+
+        if (musicSource != null)
+        {
+            musicSource.volume = savedMusicVolume;
+        }
     }
 }

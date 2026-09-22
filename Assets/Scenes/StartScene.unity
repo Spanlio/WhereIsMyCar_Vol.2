@@ -226,6 +226,7 @@ MonoBehaviour:
   settingsPopup: {fileID: 389357298}
   musicSource: {fileID: 211628528}
   musicSlider: {fileID: 1426198127}
+  soundSlider: {fileID: 284560334}
 --- !u!4 &140884450
 Transform:
   m_ObjectHideFlags: 0
@@ -566,19 +567,7 @@ MonoBehaviour:
   m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 140884449}
-        m_TargetAssemblyTypeName: StartMenuScript, Assembly-CSharp
-        m_MethodName: SetSoundVolume
-        m_Mode: 4
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &368716304
 GameObject:
   m_ObjectHideFlags: 0
