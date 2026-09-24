@@ -53,6 +53,8 @@ public class DropPlaceScript : MonoBehaviour, IDropHandler
 
                     gameObjectsScript.inRightPlace = true;
 
+                    gameObjectsScript.RegisterCorrectPlacement(eventData.pointerDrag);
+
                     // Get the dragged object's RectTransform
                     RectTransform draggedObject =
                         eventData.pointerDrag.GetComponent<RectTransform>();
