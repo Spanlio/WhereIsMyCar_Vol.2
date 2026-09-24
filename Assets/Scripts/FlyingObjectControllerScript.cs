@@ -97,6 +97,76 @@ public class FlyingObjectControllerScript : MonoBehaviour
             else
                 StartAndDestroy(Color.cyan);
         }
+        CheckCarCollision();
+    }
+
+    void CheckCarCollision()
+    {
+        if (isFadingOut)
+        {
+            return;
+        }
+
+        if (gameObjectsScript == null)
+        {
+            return;
+        }
+
+        GameObject[] cars =
+        {
+        gameObjectsScript.garbageTruck,
+        gameObjectsScript.medicine,
+        gameObjectsScript.schoolBus,
+        gameObjectsScript.b2,
+        gameObjectsScript.cementaMasina,
+        gameObjectsScript.e46,
+        gameObjectsScript.e61,
+        gameObjectsScript.ekskavators,
+        gameObjectsScript.policija,
+        gameObjectsScript.traktors1,
+        gameObjectsScript.traktors5,
+        gameObjectsScript.ugunsdzeseji
+    };
+
+        foreach (GameObject car in cars)
+        {
+            if (car == null || !car.activeSelf)
+            {
+                continue;
+            }
+
+            RectTransform carRect =
+                car.GetComponent<RectTransform>();
+
+            if (carRect == null)
+            {
+                continue;
+            }
+
+            Vector2 flyingObjectScreenPosition =
+                RectTransformUtility.WorldToScreenPoint(
+                    Camera.main,
+                    rectTransform.position
+                );
+
+            if (RectTransformUtility.RectangleContainsScreenPoint(
+                carRect,
+                flyingObjectScreenPosition,
+                Camera.main))
+            {
+                Debug.Log(
+                    "Flying object hit car: " +
+                    car.name
+                );
+
+                gameObjectsScript.LoseLife();
+
+                StartCoroutine(FadeOutAndDestroy());
+                isFadingOut = true;
+
+                return;
+            }
+        }
     }
 
     IEnumerator ShrinkAndDestroy(GameObject obj, float duration)
