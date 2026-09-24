@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.UI;
+
 
 public class FlyingObjectControllerScript : MonoBehaviour
 {
@@ -70,34 +70,71 @@ public class FlyingObjectControllerScript : MonoBehaviour
             isFadingOut = true;
         }
 
-        if(CompareTag("Bomb") && !isExploading &&
+        if (CompareTag("Bomb") && !isExploading &&
             RectTransformUtility.RectangleContainsScreenPoint(
-                rectTransform, Input.mousePosition, Camera.main)){
-            Debug.Log("The cursor collided with a bomb");
+                rectTransform, Input.mousePosition, Camera.main))
+        {
+            Debug.Log("The cursor collided with a bomb!");
             TriggerExplosion();
-            //turpinasim
-
         }
+
+        if (GameObjectsScript.isDragging && !isFadingOut
+            && RectTransformUtility.RectangleContainsScreenPoint(
+            rectTransform, Input.mousePosition, Camera.main))
+        {
+            Debug.Log("The cursor collided with a flying object!");
+            if (GameObjectsScript.lastDragged != null)
+            {
+                StartCoroutine(ShrinkAndDestroy(GameObjectsScript.lastDragged, 0.5f));
+                GameObjectsScript.lastDragged = null;
+                GameObjectsScript.isDragging = false;
+            }
+
+            if (CompareTag("Bomb"))
+
+                StartAndDestroy(Color.red);
+
+            else
+                StartAndDestroy(Color.cyan);
+        }
+    }
+
+    IEnumerator ShrinkAndDestroy(GameObject obj, float duration)
+    {
+        Vector3 originalScale = obj.transform.localScale;
+        Quaternion orginamRotation = obj.transform.rotation;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            obj.transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, time / duration);
+            float angle = Mathf.Lerp(0f, 360f, time / duration);
+            obj.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+            yield return null;
+        }
+        Destroy(obj);
     }
 
     public void TriggerExplosion()
     {
         isExploading = true;
 
-        if(gameObjectsScript.carSoundSource != null && gameObjectsScript.sounds != null)
+        if (gameObjectsScript.carSoundSource != null && gameObjectsScript.sounds != null)
         {
-            gameObjectsScript.carSoundSource.PlayOneShot(gameObjectsScript.sounds[15], 5f);
+            gameObjectsScript.carSoundSource.PlayOneShot(gameObjectsScript.sounds[6], 5f);
         }
 
-        if(TryGetComponent<Animator>(out Animator animator))
+        if (TryGetComponent<Animator>(out Animator animator))
         {
             animator.SetBool("explode", true);
         }
 
-        if(image != null)
+        if (image != null)
         {
             image.color = Color.red;
-            StartCoroutine(RecoverColor(0.4f));
+            StartCoroutine(RecoverColor(0.6f));
         }
 
         StartCoroutine(Vibrate());
@@ -107,11 +144,12 @@ public class FlyingObjectControllerScript : MonoBehaviour
     IEnumerator RecoverColor(float seconds)
     {
         yield return new WaitForSeconds(seconds);
-        if(image != null)
+        if (image != null)
         {
             image.color = originalColor;
         }
     }
+
     IEnumerator Vibrate()
     {
         Vector2 originalPos = rectTransform.anchoredPosition;
@@ -131,7 +169,7 @@ public class FlyingObjectControllerScript : MonoBehaviour
     IEnumerator WaitBeforeExplode()
     {
         float radius = 0f;
-        if(TryGetComponent<CircleCollider2D>(out CircleCollider2D circle))
+        if (TryGetComponent<CircleCollider2D>(out CircleCollider2D circle))
         {
             radius = circle.radius * transform.localScale.x;
         }
@@ -147,12 +185,13 @@ public class FlyingObjectControllerScript : MonoBehaviour
     {
         Collider2D[] hit = Physics2D.OverlapCircleAll(transform.position, radius);
 
-        foreach(Collider2D item in hit)
+        foreach (Collider2D item in hit)
         {
-            if(item != null && item.gameObject != gameObject)
+            if (item != null && item.gameObject != gameObject)
             {
-                FlyingObjectControllerScript flyingObject = item.GetComponent<FlyingObjectControllerScript>();
-                if(flyingObject != null && !flyingObject.isExploading)
+                FlyingObjectControllerScript flyingObject =
+                    item.GetComponent<FlyingObjectControllerScript>();
+                if (flyingObject != null && !flyingObject.isExploading)
                 {
                     flyingObject.StartAndDestroy(Color.cyan);
                 }
@@ -167,19 +206,20 @@ public class FlyingObjectControllerScript : MonoBehaviour
             StartCoroutine(FadeOutAndDestroy());
             isFadingOut = true;
 
-            if(image != null)
+            if (image != null)
             {
                 image.color = color;
                 StartCoroutine(RecoverColor(0.5f));
             }
 
             StartCoroutine(Vibrate());
-            if(gameObjectsScript.carSoundSource != null && gameObjectsScript.sounds != null)
+            if (gameObjectsScript.carSoundSource != null && gameObjectsScript.sounds != null)
             {
-                gameObjectsScript.carSoundSource.PlayOneShot(gameObjectsScript.sounds[14]);
+                gameObjectsScript.carSoundSource.PlayOneShot(gameObjectsScript.sounds[5]);
             }
         }
     }
+
 
     IEnumerator FadeOutAndDestroy()
     {
