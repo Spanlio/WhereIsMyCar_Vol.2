@@ -283,6 +283,16 @@ public class GameObjectsScript : MonoBehaviour
     }
 
 
+    public bool IsCarCorrectlyPlaced(GameObject car)
+    {
+        if (car == null)
+        {
+            return false;
+        }
+
+        return correctlyPlacedCars.Contains(car);
+    }
+
     // =========================================================
     // WIN GAME
     // =========================================================
