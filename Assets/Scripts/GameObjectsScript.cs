@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class GameObjectsScript : MonoBehaviour
@@ -74,7 +75,6 @@ public class GameObjectsScript : MonoBehaviour
     public AudioClip[] sounds;
     public AudioSource musicSource;
 
-
     // =========================================================
     // EXISTING DRAGGING VARIABLES
     // =========================================================
@@ -112,6 +112,18 @@ public class GameObjectsScript : MonoBehaviour
     private float gameTime = 0f;
     private bool gameFinished = false;
 
+
+    // =========================================================
+    // LIVES
+    // =========================================================
+
+    [Header("Lives")]
+
+    public int lives = 3;
+
+    public Image life1;
+    public Image life2;
+    public Image life3;
 
     // =========================================================
     // WIN SCREEN
@@ -189,6 +201,11 @@ public class GameObjectsScript : MonoBehaviour
         if (gameFinished)
         {
             return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            LoseLife();
         }
 
         // Increase timer
@@ -692,6 +709,39 @@ public class GameObjectsScript : MonoBehaviour
         {
             musicSource.volume =
                 savedMusicVolume;
+        }
+    }
+
+    public void LoseLife()
+    {
+        if (gameFinished || lives <= 0)
+        {
+            return;
+        }
+
+        lives--;
+
+        Debug.Log("LIFE LOST! Lives remaining: " + lives);
+
+        if (lives == 2 && life3 != null)
+        {
+            life3.gameObject.SetActive(false);
+        }
+        else if (lives == 1 && life2 != null)
+        {
+            life2.gameObject.SetActive(false);
+        }
+        else if (lives == 0 && life1 != null)
+        {
+            life1.gameObject.SetActive(false);
+        }
+
+        if (carSoundSource != null &&
+            sounds != null &&
+            sounds.Length > 14 &&
+            sounds[14] != null)
+        {
+            carSoundSource.PlayOneShot(sounds[14]);
         }
     }
 }
