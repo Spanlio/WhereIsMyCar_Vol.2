@@ -71,19 +71,27 @@ public class GameObjectsScript : MonoBehaviour
     public float twoPointTime = 120f;
     public float onePointTime = 180f;
 
+    [Header("Car Destruction Conditions")]
+    [SerializeField] private int destroyedCars = 0;
+    public int DestroyedCars => destroyedCars;
+    public int maxCarsBeforeDNF = 3;
+
     private HashSet<GameObject> correctlyPlacedCars = new HashSet<GameObject>();
+    private HashSet<GameObject> destroyedCarObjects = new HashSet<GameObject>();
     private const int TOTAL_CARS = 12;
 
     void Start()
     {
         Time.timeScale = 1f;
         lives = startingLives;
+        destroyedCars = 0;
         gameTime = 0f;
         gameFinished = false;
         lastDragged = null;
         isDragging = false;
         inRightPlace = false;
         correctlyPlacedCars.Clear();
+        destroyedCarObjects.Clear();
 
         if (endGamePanel != null)
             endGamePanel.Hide();
@@ -148,6 +156,33 @@ public class GameObjectsScript : MonoBehaviour
         return car != null && correctlyPlacedCars.Contains(car);
     }
 
+    // =========================================================
+    // CAR DESTRUCTION / WIN CONDITION
+    // =========================================================
+
+    public void RegisterCarDestroyed(GameObject car)
+    {
+        if (gameFinished || car == null)
+            return;
+
+        // Prevent the same car from being counted more than once.
+        if (!destroyedCarObjects.Add(car))
+            return;
+
+        destroyedCars++;
+
+        Debug.Log(
+            "CAR DESTROYED: " + car.name +
+            " | Destroyed cars: " + destroyedCars +
+            "/" + maxCarsBeforeDNF
+        );
+
+        if (destroyedCars > maxCarsBeforeDNF)
+        {
+            DNFGame();
+        }
+    }
+
     private void WinGame()
     {
         if (gameFinished)
@@ -163,6 +198,8 @@ public class GameObjectsScript : MonoBehaviour
 
         Debug.Log("WIN! All cars placed correctly!");
         Debug.Log("Final time: " + formattedTime);
+        Debug.Log("Destroyed cars: " + destroyedCars);
+        Debug.Log("Stars: " + score + "/3");
 
         if (endGamePanel != null)
             endGamePanel.ShowWin(formattedTime, score);
@@ -215,9 +252,27 @@ public class GameObjectsScript : MonoBehaviour
             endGamePanel.ShowLose(formattedTime);
     }
 
+    private void DNFGame()
+    {
+        if (gameFinished)
+            return;
+
+        gameFinished = true;
+        lastDragged = null;
+        isDragging = false;
+        FreezeGameplay();
+
+        string formattedTime = FormatTime(gameTime);
+
+        Debug.Log("DNF! Too many cars were destroyed.");
+        Debug.Log("Destroyed cars: " + destroyedCars);
+
+        if (endGamePanel != null)
+            endGamePanel.ShowDNF(formattedTime);
+    }
+
     private void FreezeGameplay()
     {
-        // Stop every gameplay animator that could keep rotating/animating.
         Animator[] animators = FindObjectsByType<Animator>(FindObjectsSortMode.None);
         foreach (Animator animator in animators)
         {
@@ -225,7 +280,6 @@ public class GameObjectsScript : MonoBehaviour
                 animator.enabled = false;
         }
 
-        // Clear all drag state immediately.
         lastDragged = null;
         isDragging = false;
         inRightPlace = false;
@@ -233,10 +287,30 @@ public class GameObjectsScript : MonoBehaviour
 
     private int CalculateScore()
     {
-        if (gameTime <= threePointTime) return 3;
-        if (gameTime <= twoPointTime) return 2;
-        if (gameTime <= onePointTime) return 1;
-        return 0;
+        // Start with the normal time-based score.
+        int timeScore;
+
+        if (gameTime <= threePointTime)
+            timeScore = 3;
+        else if (gameTime <= twoPointTime)
+            timeScore = 2;
+        else if (gameTime <= onePointTime)
+            timeScore = 1;
+        else
+            timeScore = 0;
+
+        // Destroying cars caps the maximum possible score.
+        // 0 destroyed = up to 3 stars
+        // 1 destroyed = up to 2 stars
+        // 2 destroyed = up to 1 star
+        // 3 destroyed = up to 1 star
+        if (destroyedCars >= 1)
+            timeScore = Mathf.Min(timeScore, 2);
+
+        if (destroyedCars >= 2)
+            timeScore = Mathf.Min(timeScore, 1);
+
+        return Mathf.Clamp(timeScore, 0, 3);
     }
 
     private string FormatTime(float time)
