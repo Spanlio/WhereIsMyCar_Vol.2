@@ -25,6 +25,11 @@ public class EndGamePanelScript : MonoBehaviour
         if (panel == null)
             panel = gameObject;
 
+        Hide();
+    }
+
+    public void Hide()
+    {
         if (panel != null)
             panel.SetActive(false);
     }
@@ -72,15 +77,11 @@ public class EndGamePanelScript : MonoBehaviour
 
             if (filledStar != null && emptyStar != null)
             {
-                stars[i].sprite = earned
-                    ? filledStar
-                    : emptyStar;
-
+                stars[i].sprite = earned ? filledStar : emptyStar;
                 stars[i].enabled = true;
             }
             else
             {
-                // If no star sprites are assigned, hide unearned stars.
                 stars[i].enabled = earned;
             }
         }
