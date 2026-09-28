@@ -66,6 +66,12 @@ public class GameObjectsScript : MonoBehaviour
     [Header("Shared End Game Panel")]
     public EndGamePanelScript endGamePanel;
 
+    [Header("Destroyed Cars Counter")]
+    public TMP_Text destroyedCarsText;
+
+    [Tooltip("Maximum number of destroyed cars allowed before DNF. The 4th destroyed car causes DNF.")]
+    public int maxCarsBeforeDNF = 3;
+
     [Header("Score Time Limits")]
     public float threePointTime = 60f;
     public float twoPointTime = 120f;
@@ -74,7 +80,6 @@ public class GameObjectsScript : MonoBehaviour
     [Header("Car Destruction Conditions")]
     [SerializeField] private int destroyedCars = 0;
     public int DestroyedCars => destroyedCars;
-    public int maxCarsBeforeDNF = 3;
 
     private HashSet<GameObject> correctlyPlacedCars = new HashSet<GameObject>();
     private HashSet<GameObject> destroyedCarObjects = new HashSet<GameObject>();
@@ -97,6 +102,7 @@ public class GameObjectsScript : MonoBehaviour
             endGamePanel.Hide();
 
         ResetLivesUI();
+        UpdateDestroyedCarsUI();
         RandomizeGame();
         ApplySavedAudioSettings();
         UpdateTimerDisplay();
@@ -134,6 +140,14 @@ public class GameObjectsScript : MonoBehaviour
         timerText.text = string.Format("{0:00}:{1:00}:{2:00}", hours, minutes, seconds);
     }
 
+    void UpdateDestroyedCarsUI()
+    {
+        if (destroyedCarsText == null)
+            return;
+
+        destroyedCarsText.text = "CARS LOST: " + destroyedCars + "/" + maxCarsBeforeDNF;
+    }
+
     public void RegisterCorrectPlacement(GameObject car)
     {
         if (gameFinished || car == null)
@@ -147,9 +161,6 @@ public class GameObjectsScript : MonoBehaviour
 
         inRightPlace = true;
 
-        // Destroyed cars are removed from the required total.
-        // Example: 2 destroyed cars means the player only needs
-        // to correctly place the remaining 10 cars.
         int requiredCars = TOTAL_CARS - destroyedCars;
 
         if (correctlyPlacedCars.Count >= requiredCars)
@@ -161,26 +172,18 @@ public class GameObjectsScript : MonoBehaviour
         return car != null && correctlyPlacedCars.Contains(car);
     }
 
-    // =========================================================
-    // CAR DESTRUCTION / WIN CONDITION
-    // =========================================================
-
     public void RegisterCarDestroyed(GameObject car)
     {
         if (gameFinished || car == null)
             return;
 
-        // Prevent the same car from being counted more than once.
         if (!destroyedCarObjects.Add(car))
             return;
 
         destroyedCars++;
+        UpdateDestroyedCarsUI();
 
-        Debug.Log(
-            "CAR DESTROYED: " + car.name +
-            " | Destroyed cars: " + destroyedCars +
-            "/" + maxCarsBeforeDNF
-        );
+        Debug.Log("CAR DESTROYED: " + car.name + " | Destroyed cars: " + destroyedCars + "/" + maxCarsBeforeDNF);
 
         if (destroyedCars > maxCarsBeforeDNF)
             DNFGame();
@@ -301,11 +304,6 @@ public class GameObjectsScript : MonoBehaviour
         else
             timeScore = 0;
 
-        // Car destruction caps the maximum possible score.
-        // 0 destroyed = up to 3 stars
-        // 1 destroyed = up to 2 stars
-        // 2 destroyed = up to 1 star
-        // 3 destroyed = up to 1 star
         if (destroyedCars >= 1)
             timeScore = Mathf.Min(timeScore, 2);
 
@@ -346,8 +344,7 @@ public class GameObjectsScript : MonoBehaviour
         List<Transform> carSpawnPoints = GetDirectChildren(carsSpawnPointsContainer);
         List<Transform> placeSpawnPoints = GetDirectChildren(placeSpawnPointsContainer);
 
-        if (cars.Count != TOTAL_CARS || places.Count != TOTAL_CARS ||
-            carSpawnPoints.Count < TOTAL_CARS || placeSpawnPoints.Count < TOTAL_CARS)
+        if (cars.Count != TOTAL_CARS || places.Count != TOTAL_CARS || carSpawnPoints.Count < TOTAL_CARS || placeSpawnPoints.Count < TOTAL_CARS)
         {
             Debug.LogError("Randomization setup does not contain the expected 12 cars, 12 places and enough spawn points.");
             return;
