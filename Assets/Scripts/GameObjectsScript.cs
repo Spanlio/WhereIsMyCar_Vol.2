@@ -142,12 +142,17 @@ public class GameObjectsScript : MonoBehaviour
         if (!correctlyPlacedCars.Contains(car))
         {
             correctlyPlacedCars.Add(car);
-            Debug.Log("Correct cars: " + correctlyPlacedCars.Count + "/" + TOTAL_CARS);
+            Debug.Log("Correct cars: " + correctlyPlacedCars.Count + "/" + (TOTAL_CARS - destroyedCars));
         }
 
         inRightPlace = true;
 
-        if (correctlyPlacedCars.Count >= TOTAL_CARS)
+        // Destroyed cars are removed from the required total.
+        // Example: 2 destroyed cars means the player only needs
+        // to correctly place the remaining 10 cars.
+        int requiredCars = TOTAL_CARS - destroyedCars;
+
+        if (correctlyPlacedCars.Count >= requiredCars)
             WinGame();
     }
 
@@ -178,9 +183,7 @@ public class GameObjectsScript : MonoBehaviour
         );
 
         if (destroyedCars > maxCarsBeforeDNF)
-        {
             DNFGame();
-        }
     }
 
     private void WinGame()
@@ -196,7 +199,7 @@ public class GameObjectsScript : MonoBehaviour
         int score = CalculateScore();
         string formattedTime = FormatTime(gameTime);
 
-        Debug.Log("WIN! All cars placed correctly!");
+        Debug.Log("WIN! All remaining cars placed correctly!");
         Debug.Log("Final time: " + formattedTime);
         Debug.Log("Destroyed cars: " + destroyedCars);
         Debug.Log("Stars: " + score + "/3");
@@ -287,7 +290,6 @@ public class GameObjectsScript : MonoBehaviour
 
     private int CalculateScore()
     {
-        // Start with the normal time-based score.
         int timeScore;
 
         if (gameTime <= threePointTime)
@@ -299,7 +301,7 @@ public class GameObjectsScript : MonoBehaviour
         else
             timeScore = 0;
 
-        // Destroying cars caps the maximum possible score.
+        // Car destruction caps the maximum possible score.
         // 0 destroyed = up to 3 stars
         // 1 destroyed = up to 2 stars
         // 2 destroyed = up to 1 star
