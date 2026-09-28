@@ -66,9 +66,6 @@ public class GameObjectsScript : MonoBehaviour
     [Header("Shared End Game Panel")]
     public EndGamePanelScript endGamePanel;
 
-    [Header("Destroyed Cars Counter")]
-    public TMP_Text destroyedCarsText;
-
     [Tooltip("Maximum number of destroyed cars allowed before DNF. The 4th destroyed car causes DNF.")]
     public int maxCarsBeforeDNF = 3;
 
@@ -102,7 +99,6 @@ public class GameObjectsScript : MonoBehaviour
             endGamePanel.Hide();
 
         ResetLivesUI();
-        UpdateDestroyedCarsUI();
         RandomizeGame();
         ApplySavedAudioSettings();
         UpdateTimerDisplay();
@@ -140,14 +136,6 @@ public class GameObjectsScript : MonoBehaviour
         timerText.text = string.Format("{0:00}:{1:00}:{2:00}", hours, minutes, seconds);
     }
 
-    void UpdateDestroyedCarsUI()
-    {
-        if (destroyedCarsText == null)
-            return;
-
-        destroyedCarsText.text = "CARS LOST: " + destroyedCars + "/" + maxCarsBeforeDNF;
-    }
-
     public void RegisterCorrectPlacement(GameObject car)
     {
         if (gameFinished || car == null)
@@ -181,7 +169,6 @@ public class GameObjectsScript : MonoBehaviour
             return;
 
         destroyedCars++;
-        UpdateDestroyedCarsUI();
 
         Debug.Log("CAR DESTROYED: " + car.name + " | Destroyed cars: " + destroyedCars + "/" + maxCarsBeforeDNF);
 
