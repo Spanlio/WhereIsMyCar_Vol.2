@@ -59,10 +59,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
                 waveOffset * Time.deltaTime
             );
 
-        // =====================================================
-        // SCREEN EDGES
-        // =====================================================
-
         if (speed > 0 &&
             transform.position.x < screenBoundariesScript.minX + 80 &&
             !isFadingOut)
@@ -90,6 +86,8 @@ public class FlyingObjectControllerScript : MonoBehaviour
             if (GameObjectsScript.isDragging &&
                 GameObjectsScript.lastDragged != null)
             {
+                // While dragging a car, the cursor itself must NOT
+                // activate the bomb. Only actual bomb/car overlap does.
                 CheckBombVsDraggedCar();
             }
             else
@@ -116,16 +114,11 @@ public class FlyingObjectControllerScript : MonoBehaviour
             GameObject car = GameObjectsScript.lastDragged;
 
             // A cloud/airplane crash counts as one destroyed car.
-            // The same car cannot be counted twice.
             gameObjectsScript.RegisterCarDestroyed(car);
 
-            // Stop the drag immediately.
             GameObjectsScript.lastDragged = null;
             GameObjectsScript.isDragging = false;
 
-            // If this was the 4th destroyed car, DNF has already
-            // ended the game. Destroy the car immediately so it
-            // cannot remain half-shrunk behind the end panel.
             if (gameObjectsScript.GameFinished)
             {
                 if (car != null)
@@ -144,10 +137,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
             StartAndDestroy(Color.cyan);
         }
-
-        // =====================================================
-        // PHYSICAL CAR COLLISION
-        // =====================================================
 
         CheckCarCollision();
     }
@@ -188,8 +177,7 @@ public class FlyingObjectControllerScript : MonoBehaviour
         if (gameObjectsScript.IsCarCorrectlyPlaced(car))
             return;
 
-        RectTransform carRect =
-            car.GetComponent<RectTransform>();
+        RectTransform carRect = car.GetComponent<RectTransform>();
 
         if (carRect == null)
             return;
@@ -246,14 +234,18 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
     void HitDraggedCar(GameObject car)
     {
-        if (hasHitDraggedCar)
+        if (hasHitDraggedCar || car == null)
             return;
 
         hasHitDraggedCar = true;
 
         Debug.Log("BOMB HIT DRAGGED CAR: " + car.name);
 
+        // A bomb hitting the dragged car now does BOTH things:
+        // 1. removes one heart
+        // 2. destroys the car
         gameObjectsScript.LoseLife();
+        gameObjectsScript.RegisterCarDestroyed(car);
 
         GameObjectsScript.lastDragged = null;
         GameObjectsScript.isDragging = false;
@@ -264,9 +256,14 @@ public class FlyingObjectControllerScript : MonoBehaviour
         if (carCanvasGroup != null)
         {
             carCanvasGroup.alpha = 1f;
-            carCanvasGroup.blocksRaycasts = true;
+            carCanvasGroup.blocksRaycasts = false;
         }
 
+        // Do not leave the car sitting in the scene after the bomb hit.
+        // This also prevents it from being placed later.
+        Destroy(car);
+
+        // Destroy the bomb too.
         StartAndDestroy(Color.red);
     }
 
@@ -276,10 +273,7 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
     void CheckCarCollision()
     {
-        if (gameObjectsScript == null)
-            return;
-
-        if (isFadingOut)
+        if (gameObjectsScript == null || isFadingOut)
             return;
 
         if (!GameObjectsScript.isDragging)
@@ -293,8 +287,7 @@ public class FlyingObjectControllerScript : MonoBehaviour
         if (gameObjectsScript.IsCarCorrectlyPlaced(car))
             return;
 
-        RectTransform carRect =
-            car.GetComponent<RectTransform>();
+        RectTransform carRect = car.GetComponent<RectTransform>();
 
         if (carRect == null)
             return;
@@ -310,13 +303,9 @@ public class FlyingObjectControllerScript : MonoBehaviour
             flyingObjectScreenPosition,
             Camera.main))
         {
-            Debug.Log(
-                "Flying object hit dragged car: " +
-                car.name
-            );
+            Debug.Log("Flying object hit dragged car: " + car.name);
 
             gameObjectsScript.LoseLife();
-
             GameObjectsScript.lastDragged = null;
             GameObjectsScript.isDragging = false;
 
@@ -329,16 +318,12 @@ public class FlyingObjectControllerScript : MonoBehaviour
     // SHRINK + DESTROY CAR
     // =========================================================
 
-    IEnumerator ShrinkAndDestroy(
-        GameObject obj,
-        float duration)
+    IEnumerator ShrinkAndDestroy(GameObject obj, float duration)
     {
         if (obj == null)
             yield break;
 
-        Vector3 originalScale =
-            obj.transform.localScale;
-
+        Vector3 originalScale = obj.transform.localScale;
         float time = 0f;
 
         while (time < duration)
@@ -359,19 +344,10 @@ public class FlyingObjectControllerScript : MonoBehaviour
                     time / duration
                 );
 
-            float angle =
-                Mathf.Lerp(
-                    0f,
-                    360f,
-                    time / duration
-                );
+            float angle = Mathf.Lerp(0f, 360f, time / duration);
 
             obj.transform.rotation =
-                Quaternion.Euler(
-                    0f,
-                    0f,
-                    angle
-                );
+                Quaternion.Euler(0f, 0f, angle);
 
             yield return null;
         }
@@ -405,8 +381,7 @@ public class FlyingObjectControllerScript : MonoBehaviour
             );
         }
 
-        Animator animator =
-            GetComponent<Animator>();
+        Animator animator = GetComponent<Animator>();
 
         if (animator != null)
             animator.SetBool("explode", true);
@@ -414,26 +389,18 @@ public class FlyingObjectControllerScript : MonoBehaviour
         if (image != null)
         {
             image.color = Color.red;
-
-            StartCoroutine(
-                RecoverColor(0.6f)
-            );
+            StartCoroutine(RecoverColor(0.6f));
         }
 
         StartCoroutine(Vibrate());
         StartCoroutine(WaitBeforeExplode());
     }
 
-    // =========================================================
-    // EXPLOSION
-    // =========================================================
-
     IEnumerator WaitBeforeExplode()
     {
         float radius = 0f;
 
-        CircleCollider2D circle =
-            GetComponent<CircleCollider2D>();
+        CircleCollider2D circle = GetComponent<CircleCollider2D>();
 
         if (circle != null)
         {
@@ -451,12 +418,10 @@ public class FlyingObjectControllerScript : MonoBehaviour
             yield break;
 
         ExplodeAndDestroyNearbyObjects(radius);
-
         Destroy(gameObject);
     }
 
-    void ExplodeAndDestroyNearbyObjects(
-        float radius)
+    void ExplodeAndDestroyNearbyObjects(float radius)
     {
         if (gameObjectsScript != null &&
             gameObjectsScript.GameFinished)
@@ -475,16 +440,12 @@ public class FlyingObjectControllerScript : MonoBehaviour
                 continue;
 
             FlyingObjectControllerScript flyingObject =
-                collider.GetComponent<
-                    FlyingObjectControllerScript
-                >();
+                collider.GetComponent<FlyingObjectControllerScript>();
 
             if (flyingObject != null &&
                 !flyingObject.IsExploding)
             {
-                flyingObject.StartAndDestroy(
-                    Color.cyan
-                );
+                flyingObject.StartAndDestroy(Color.cyan);
             }
         }
     }
@@ -505,10 +466,7 @@ public class FlyingObjectControllerScript : MonoBehaviour
         if (image != null)
         {
             image.color = color;
-
-            StartCoroutine(
-                RecoverColor(0.5f)
-            );
+            StartCoroutine(RecoverColor(0.5f));
         }
 
         StartCoroutine(Vibrate());
@@ -526,10 +484,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
         StartCoroutine(FadeOutAndDestroy());
     }
-
-    // =========================================================
-    // FADE IN
-    // =========================================================
 
     IEnumerator FadeIn()
     {
@@ -552,10 +506,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
         canvasGroup.alpha = 1f;
     }
 
-    // =========================================================
-    // FADE OUT
-    // =========================================================
-
     IEnumerator FadeOutAndDestroy()
     {
         float time = 0f;
@@ -576,13 +526,8 @@ public class FlyingObjectControllerScript : MonoBehaviour
         }
 
         canvasGroup.alpha = 0f;
-
         Destroy(gameObject);
     }
-
-    // =========================================================
-    // COLOR RECOVERY
-    // =========================================================
 
     IEnumerator RecoverColor(float seconds)
     {
@@ -591,10 +536,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
         if (image != null)
             image.color = originalColor;
     }
-
-    // =========================================================
-    // VIBRATION
-    // =========================================================
 
     IEnumerator Vibrate()
     {
@@ -616,11 +557,9 @@ public class FlyingObjectControllerScript : MonoBehaviour
                 Random.insideUnitCircle * intensity;
 
             elapsed += Time.deltaTime;
-
             yield return null;
         }
 
-        rectTransform.anchoredPosition =
-            originalPosition;
+        rectTransform.anchoredPosition = originalPosition;
     }
 }
