@@ -6,14 +6,13 @@ using TMPro;
 public class GameObjectsScript : MonoBehaviour
 {
     // =========================================================
-    // EXISTING OBJECTS
+    // CARS
     // =========================================================
 
     public GameObject garbageTruck;
     public GameObject medicine;
     public GameObject schoolBus;
 
-    // New objects
     public GameObject b2;
     public GameObject cementaMasina;
     public GameObject e46;
@@ -24,50 +23,25 @@ public class GameObjectsScript : MonoBehaviour
     public GameObject traktors5;
     public GameObject ugunsdzeseji;
 
+    // =========================================================
+    // COORDINATES
+    // =========================================================
+
+    [HideInInspector] public Vector2 garbageTruckCoord;
+    [HideInInspector] public Vector2 medicineCoord;
+    [HideInInspector] public Vector2 schoolBusCoord;
+    [HideInInspector] public Vector2 b2Coord;
+    [HideInInspector] public Vector2 cementaMasinaCoord;
+    [HideInInspector] public Vector2 e46Coord;
+    [HideInInspector] public Vector2 e61Coord;
+    [HideInInspector] public Vector2 ekskavatorsCoord;
+    [HideInInspector] public Vector2 policijaCoord;
+    [HideInInspector] public Vector2 traktors1Coord;
+    [HideInInspector] public Vector2 traktors5Coord;
+    [HideInInspector] public Vector2 ugunsdzesejiCoord;
 
     // =========================================================
-    // STARTING COORDINATES
-    // =========================================================
-
-    [HideInInspector]
-    public Vector2 garbageTruckCoord;
-
-    [HideInInspector]
-    public Vector2 medicineCoord;
-
-    [HideInInspector]
-    public Vector2 schoolBusCoord;
-
-    [HideInInspector]
-    public Vector2 b2Coord;
-
-    [HideInInspector]
-    public Vector2 cementaMasinaCoord;
-
-    [HideInInspector]
-    public Vector2 e46Coord;
-
-    [HideInInspector]
-    public Vector2 e61Coord;
-
-    [HideInInspector]
-    public Vector2 ekskavatorsCoord;
-
-    [HideInInspector]
-    public Vector2 policijaCoord;
-
-    [HideInInspector]
-    public Vector2 traktors1Coord;
-
-    [HideInInspector]
-    public Vector2 traktors5Coord;
-
-    [HideInInspector]
-    public Vector2 ugunsdzesejiCoord;
-
-
-    // =========================================================
-    // AUDIO / CANVAS
+    // AUDIO
     // =========================================================
 
     public Canvas canvas;
@@ -76,49 +50,52 @@ public class GameObjectsScript : MonoBehaviour
     public AudioSource musicSource;
 
     // =========================================================
-    // EXISTING DRAGGING VARIABLES
+    // DRAGGING
     // =========================================================
-
-    [HideInInspector]
-    public bool inRightPlace = false;
 
     public static GameObject lastDragged = null;
     public static bool isDragging = false;
 
+    [HideInInspector]
+    public bool inRightPlace = false;
 
     // =========================================================
-    // RANDOM SPAWN SETUP
+    // RANDOM SPAWN
     // =========================================================
 
     [Header("Random Spawn Setup")]
-
     public Transform carsContainer;
     public Transform placesContainer;
     public Transform carsSpawnPointsContainer;
     public Transform placeSpawnPointsContainer;
 
-    [Tooltip("Maximum random rotation added to cars and places.")]
     public float maxRandomRotation = 5f;
 
-
     // =========================================================
-    // GAME TIMER
+    // TIMER
     // =========================================================
 
     [Header("Game Timer")]
-
     public TMP_Text timerText;
 
     private float gameTime = 0f;
+
+    // =========================================================
+    // GAME STATE
+    // =========================================================
+
+    [Header("Game State")]
+    [SerializeField]
     private bool gameFinished = false;
 
+    public bool GameFinished => gameFinished;
 
     // =========================================================
     // LIVES
     // =========================================================
 
     [Header("Lives")]
-
+    public int startingLives = 3;
     public int lives = 3;
 
     public Image life1;
@@ -130,39 +107,35 @@ public class GameObjectsScript : MonoBehaviour
     // =========================================================
 
     [Header("Win Screen")]
-
     public GameObject winPanel;
-
     public TMP_Text finalTimeText;
-
     public TMP_Text scoreText;
 
+    // =========================================================
+    // LOSE SCREEN
+    // =========================================================
+
+    [Header("Lose Screen")]
+    public GameObject losePanel;
+    public TMP_Text loseTimeText;
 
     // =========================================================
-    // SCORE SETTINGS
+    // SCORE
     // =========================================================
 
     [Header("Score Time Limits")]
-
-    [Tooltip("Maximum time for 3 points.")]
     public float threePointTime = 60f;
-
-    [Tooltip("Maximum time for 2 points.")]
     public float twoPointTime = 120f;
-
-    [Tooltip("Maximum time for 1 point.")]
     public float onePointTime = 180f;
 
-
     // =========================================================
-    // CORRECTLY PLACED CARS
+    // PLACED CARS
     // =========================================================
 
     private HashSet<GameObject> correctlyPlacedCars =
         new HashSet<GameObject>();
 
-    private const int totalCars = 12;
-
+    private const int TOTAL_CARS = 12;
 
     // =========================================================
     // START
@@ -170,27 +143,31 @@ public class GameObjectsScript : MonoBehaviour
 
     void Start()
     {
-        RandomizeGame();
+        lives = startingLives;
 
-        ApplySavedAudioSettings();
-
-        // Reset game state
         gameTime = 0f;
         gameFinished = false;
 
-        correctlyPlacedCars.Clear();
+        lastDragged = null;
+        isDragging = false;
 
         inRightPlace = false;
 
-        // Hide win screen at start
+        correctlyPlacedCars.Clear();
+
         if (winPanel != null)
-        {
             winPanel.SetActive(false);
-        }
+
+        if (losePanel != null)
+            losePanel.SetActive(false);
+
+        ResetLivesUI();
+
+        RandomizeGame();
+        ApplySavedAudioSettings();
 
         UpdateTimerDisplay();
     }
-
 
     // =========================================================
     // UPDATE
@@ -199,34 +176,40 @@ public class GameObjectsScript : MonoBehaviour
     void Update()
     {
         if (gameFinished)
-        {
             return;
-        }
 
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            LoseLife();
-        }
-
-        // Increase timer
         gameTime += Time.deltaTime;
 
         UpdateTimerDisplay();
+
+        // =========================================================
+        // DEBUG KEYS
+        // =========================================================
+
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            Debug.Log("DEBUG: Instant Lose");
+            LoseGame();
+        }
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            Debug.Log("DEBUG: Instant Win");
+            WinGame();
+        }
     }
 
-
     // =========================================================
-    // TIMER DISPLAY
+    // TIMER
     // =========================================================
 
     void UpdateTimerDisplay()
     {
         if (timerText == null)
-        {
             return;
-        }
 
-        int hours = Mathf.FloorToInt(gameTime / 3600f);
+        int hours =
+            Mathf.FloorToInt(gameTime / 3600f);
 
         int minutes =
             Mathf.FloorToInt((gameTime % 3600f) / 60f);
@@ -243,24 +226,15 @@ public class GameObjectsScript : MonoBehaviour
             );
     }
 
-
     // =========================================================
-    // REGISTER CORRECT PLACEMENT
+    // REGISTER CORRECT CAR
     // =========================================================
 
     public void RegisterCorrectPlacement(GameObject car)
     {
-        if (gameFinished)
-        {
+        if (gameFinished || car == null)
             return;
-        }
 
-        if (car == null)
-        {
-            return;
-        }
-
-        // Only count each car once
         if (!correctlyPlacedCars.Contains(car))
         {
             correctlyPlacedCars.Add(car);
@@ -268,63 +242,65 @@ public class GameObjectsScript : MonoBehaviour
             Debug.Log(
                 "Correct cars: " +
                 correctlyPlacedCars.Count +
-                " / " +
-                totalCars
+                "/" +
+                TOTAL_CARS
             );
         }
 
         inRightPlace = true;
 
-        // Check whether all cars are correctly placed
-        if (correctlyPlacedCars.Count >= totalCars)
+        if (correctlyPlacedCars.Count >= TOTAL_CARS)
         {
             WinGame();
         }
     }
 
+    // =========================================================
+    // CHECK IF CAR IS CORRECT
+    // =========================================================
 
     public bool IsCarCorrectlyPlaced(GameObject car)
     {
         if (car == null)
-        {
             return false;
-        }
 
         return correctlyPlacedCars.Contains(car);
     }
 
     // =========================================================
-    // WIN GAME
+    // WIN
     // =========================================================
 
-    void WinGame()
+    private void WinGame()
     {
         if (gameFinished)
-        {
             return;
-        }
 
         gameFinished = true;
 
-        Debug.Log("ALL CARS PLACED CORRECTLY!");
-        Debug.Log("Final time: " + FormatTime(gameTime));
+        lastDragged = null;
+        isDragging = false;
 
         int score = CalculateScore();
 
-        // Show win panel
-        if (winPanel != null)
-        {
-            winPanel.SetActive(true);
-        }
+        Debug.Log(
+            "WIN! All cars placed correctly!"
+        );
 
-        // Final time
+        Debug.Log(
+            "Final time: " +
+            FormatTime(gameTime)
+        );
+
+        if (winPanel != null)
+            winPanel.SetActive(true);
+
         if (finalTimeText != null)
         {
             finalTimeText.text =
                 "Time: " + FormatTime(gameTime);
         }
 
-        // Score
         if (scoreText != null)
         {
             scoreText.text =
@@ -332,37 +308,128 @@ public class GameObjectsScript : MonoBehaviour
         }
     }
 
+    // =========================================================
+    // LOSE LIFE
+    // =========================================================
+
+    public void LoseLife()
+    {
+        if (gameFinished)
+            return;
+
+        if (lives <= 0)
+            return;
+
+        lives--;
+
+        Debug.Log(
+            "LIFE LOST! Remaining: " +
+            lives
+        );
+
+        UpdateLivesUI();
+
+        // Play losing-life sound if assigned.
+        if (carSoundSource != null &&
+            sounds != null &&
+            sounds.Length > 14 &&
+            sounds[14] != null)
+        {
+            carSoundSource.PlayOneShot(
+                sounds[14]
+            );
+        }
+
+        // Last heart lost.
+        if (lives <= 0)
+        {
+            LoseGame();
+        }
+    }
 
     // =========================================================
-    // CALCULATE SCORE
+    // RESET HEART UI
     // =========================================================
 
-    int CalculateScore()
+    private void ResetLivesUI()
+    {
+        if (life1 != null)
+            life1.gameObject.SetActive(true);
+
+        if (life2 != null)
+            life2.gameObject.SetActive(true);
+
+        if (life3 != null)
+            life3.gameObject.SetActive(true);
+    }
+
+    // =========================================================
+    // UPDATE HEART UI
+    // =========================================================
+
+    private void UpdateLivesUI()
+    {
+        if (life1 != null)
+            life1.gameObject.SetActive(lives >= 1);
+
+        if (life2 != null)
+            life2.gameObject.SetActive(lives >= 2);
+
+        if (life3 != null)
+            life3.gameObject.SetActive(lives >= 3);
+    }
+
+    // =========================================================
+    // LOSE GAME
+    // =========================================================
+
+    private void LoseGame()
+    {
+        if (gameFinished)
+            return;
+
+        gameFinished = true;
+
+        lastDragged = null;
+        isDragging = false;
+
+        Debug.Log(
+            "GAME OVER! All hearts lost."
+        );
+
+        if (losePanel != null)
+            losePanel.SetActive(true);
+
+        if (loseTimeText != null)
+        {
+            loseTimeText.text =
+                "Time: " + FormatTime(gameTime);
+        }
+    }
+
+    // =========================================================
+    // SCORE
+    // =========================================================
+
+    private int CalculateScore()
     {
         if (gameTime <= threePointTime)
-        {
             return 3;
-        }
 
         if (gameTime <= twoPointTime)
-        {
             return 2;
-        }
 
         if (gameTime <= onePointTime)
-        {
             return 1;
-        }
 
         return 0;
     }
-
 
     // =========================================================
     // FORMAT TIME
     // =========================================================
 
-    string FormatTime(float time)
+    private string FormatTime(float time)
     {
         int hours =
             Mathf.FloorToInt(time / 3600f);
@@ -381,112 +448,98 @@ public class GameObjectsScript : MonoBehaviour
         );
     }
 
-
     // =========================================================
-    // RANDOMIZATION
+    // RANDOMIZE GAME
     // =========================================================
 
     void RandomizeGame()
     {
-        // Get the 12 actual cars
-        List<GameObject> cars = new List<GameObject>
-        {
-            garbageTruck,
-            medicine,
-            schoolBus,
-            b2,
-            cementaMasina,
-            e46,
-            e61,
-            ekskavators,
-            policija,
-            traktors1,
-            traktors5,
-            ugunsdzeseji
-        };
+        List<GameObject> cars =
+            new List<GameObject>
+            {
+                garbageTruck,
+                medicine,
+                schoolBus,
+                b2,
+                cementaMasina,
+                e46,
+                e61,
+                ekskavators,
+                policija,
+                traktors1,
+                traktors5,
+                ugunsdzeseji
+            };
 
-
-        // Get the 12 destination objects
-        List<GameObject> places = new List<GameObject>();
+        List<GameObject> places =
+            new List<GameObject>();
 
         if (placesContainer != null)
         {
-            for (int i = 0; i < placesContainer.childCount; i++)
+            for (int i = 0;
+                 i < placesContainer.childCount;
+                 i++)
             {
                 GameObject child =
-                    placesContainer.GetChild(i).gameObject;
+                    placesContainer
+                        .GetChild(i)
+                        .gameObject;
 
                 if (child.GetComponent<DropPlaceScript>() != null)
-                {
                     places.Add(child);
-                }
             }
         }
 
-
-        // Get the 17 car spawn points
         List<Transform> carSpawnPoints =
-            GetDirectChildren(carsSpawnPointsContainer);
+            GetDirectChildren(
+                carsSpawnPointsContainer
+            );
 
-
-        // Get the 17 place spawn points
         List<Transform> placeSpawnPoints =
-            GetDirectChildren(placeSpawnPointsContainer);
+            GetDirectChildren(
+                placeSpawnPointsContainer
+            );
 
-
-        // Validate setup
-        if (cars.Count != 12)
+        if (cars.Count != TOTAL_CARS)
         {
             Debug.LogError(
-                "Expected 12 cars, but found " +
-                cars.Count + "."
+                "Expected 12 cars, found " +
+                cars.Count
             );
 
             return;
         }
 
-
-        if (places.Count != 12)
+        if (places.Count != TOTAL_CARS)
         {
             Debug.LogError(
-                "Expected 12 Places, but found " +
-                places.Count + "."
+                "Expected 12 places, found " +
+                places.Count
             );
 
             return;
         }
 
-
-        if (carSpawnPoints.Count != 17)
+        if (carSpawnPoints.Count < TOTAL_CARS)
         {
             Debug.LogError(
-                "Expected 17 car spawn points, but found " +
-                carSpawnPoints.Count + "."
+                "Not enough car spawn points!"
             );
 
             return;
         }
 
-
-        if (placeSpawnPoints.Count != 17)
+        if (placeSpawnPoints.Count < TOTAL_CARS)
         {
             Debug.LogError(
-                "Expected 17 place spawn points, but found " +
-                placeSpawnPoints.Count + "."
+                "Not enough place spawn points!"
             );
 
             return;
         }
 
-
-        // Shuffle both lists independently
         Shuffle(carSpawnPoints);
         Shuffle(placeSpawnPoints);
-
-
-        // =====================================================
-        // RANDOMIZE CARS
-        // =====================================================
 
         for (int i = 0; i < cars.Count; i++)
         {
@@ -494,23 +547,12 @@ public class GameObjectsScript : MonoBehaviour
                 cars[i].GetComponent<RectTransform>();
 
             if (carRect == null)
-            {
-                Debug.LogError(
-                    cars[i].name +
-                    " does not have a RectTransform."
-                );
-
                 continue;
-            }
 
-
-            // Move car to random spawn point
             carRect.position =
                 carSpawnPoints[i].position;
 
-
-            // Random rotation
-            float randomRotation =
+            float rotation =
                 Random.Range(
                     -maxRandomRotation,
                     maxRandomRotation
@@ -520,14 +562,9 @@ public class GameObjectsScript : MonoBehaviour
                 Quaternion.Euler(
                     0f,
                     0f,
-                    randomRotation
+                    rotation
                 );
         }
-
-
-        // =====================================================
-        // RANDOMIZE PLACES
-        // =====================================================
 
         for (int i = 0; i < places.Count; i++)
         {
@@ -535,23 +572,12 @@ public class GameObjectsScript : MonoBehaviour
                 places[i].GetComponent<RectTransform>();
 
             if (placeRect == null)
-            {
-                Debug.LogError(
-                    places[i].name +
-                    " does not have a RectTransform."
-                );
-
                 continue;
-            }
 
-
-            // Move destination
             placeRect.position =
                 placeSpawnPoints[i].position;
 
-
-            // Random rotation
-            float randomRotation =
+            float rotation =
                 Random.Range(
                     -maxRandomRotation,
                     maxRandomRotation
@@ -561,45 +587,37 @@ public class GameObjectsScript : MonoBehaviour
                 Quaternion.Euler(
                     0f,
                     0f,
-                    randomRotation
+                    rotation
                 );
         }
 
-
-        // Save randomized starting positions
         SaveCarStartingPositions();
-
-
-        Debug.Log("Randomization complete.");
     }
 
-
     // =========================================================
-    // GET DIRECT CHILDREN
+    // CHILDREN
     // =========================================================
 
-    List<Transform> GetDirectChildren(Transform parent)
+    List<Transform> GetDirectChildren(
+        Transform parent)
     {
-        List<Transform> children =
+        List<Transform> result =
             new List<Transform>();
 
         if (parent == null)
-        {
-            return children;
-        }
+            return result;
 
-
-        for (int i = 0; i < parent.childCount; i++)
+        for (int i = 0;
+             i < parent.childCount;
+             i++)
         {
-            children.Add(
+            result.Add(
                 parent.GetChild(i)
             );
         }
 
-
-        return children;
+        return result;
     }
-
 
     // =========================================================
     // SHUFFLE
@@ -607,87 +625,66 @@ public class GameObjectsScript : MonoBehaviour
 
     void Shuffle<T>(List<T> list)
     {
-        for (int i = list.Count - 1; i > 0; i--)
+        for (int i = list.Count - 1;
+             i > 0;
+             i--)
         {
             int randomIndex =
                 Random.Range(0, i + 1);
 
-            T temp = list[i];
+            T temp =
+                list[i];
 
-            list[i] = list[randomIndex];
+            list[i] =
+                list[randomIndex];
 
-            list[randomIndex] = temp;
+            list[randomIndex] =
+                temp;
         }
     }
 
-
     // =========================================================
-    // SAVE STARTING POSITIONS
+    // SAVE POSITIONS
     // =========================================================
 
     void SaveCarStartingPositions()
     {
         garbageTruckCoord =
-            garbageTruck
-                .GetComponent<RectTransform>()
-                .localPosition;
+            garbageTruck.GetComponent<RectTransform>().localPosition;
 
         medicineCoord =
-            medicine
-                .GetComponent<RectTransform>()
-                .localPosition;
+            medicine.GetComponent<RectTransform>().localPosition;
 
         schoolBusCoord =
-            schoolBus
-                .GetComponent<RectTransform>()
-                .localPosition;
+            schoolBus.GetComponent<RectTransform>().localPosition;
 
         b2Coord =
-            b2
-                .GetComponent<RectTransform>()
-                .localPosition;
+            b2.GetComponent<RectTransform>().localPosition;
 
         cementaMasinaCoord =
-            cementaMasina
-                .GetComponent<RectTransform>()
-                .localPosition;
+            cementaMasina.GetComponent<RectTransform>().localPosition;
 
         e46Coord =
-            e46
-                .GetComponent<RectTransform>()
-                .localPosition;
+            e46.GetComponent<RectTransform>().localPosition;
 
         e61Coord =
-            e61
-                .GetComponent<RectTransform>()
-                .localPosition;
+            e61.GetComponent<RectTransform>().localPosition;
 
         ekskavatorsCoord =
-            ekskavators
-                .GetComponent<RectTransform>()
-                .localPosition;
+            ekskavators.GetComponent<RectTransform>().localPosition;
 
         policijaCoord =
-            policija
-                .GetComponent<RectTransform>()
-                .localPosition;
+            policija.GetComponent<RectTransform>().localPosition;
 
         traktors1Coord =
-            traktors1
-                .GetComponent<RectTransform>()
-                .localPosition;
+            traktors1.GetComponent<RectTransform>().localPosition;
 
         traktors5Coord =
-            traktors5
-                .GetComponent<RectTransform>()
-                .localPosition;
+            traktors5.GetComponent<RectTransform>().localPosition;
 
         ugunsdzesejiCoord =
-            ugunsdzeseji
-                .GetComponent<RectTransform>()
-                .localPosition;
+            ugunsdzeseji.GetComponent<RectTransform>().localPosition;
     }
-
 
     // =========================================================
     // AUDIO SETTINGS
@@ -695,63 +692,24 @@ public class GameObjectsScript : MonoBehaviour
 
     void ApplySavedAudioSettings()
     {
-        float savedSoundVolume =
+        float soundVolume =
             PlayerPrefs.GetFloat(
                 "SoundVolume",
                 1f
             );
 
-        float savedMusicVolume =
+        float musicVolume =
             PlayerPrefs.GetFloat(
                 "MusicVolume",
                 0.3f
             );
 
-
         if (carSoundSource != null)
-        {
             carSoundSource.volume =
-                savedSoundVolume;
-        }
-
+                soundVolume;
 
         if (musicSource != null)
-        {
             musicSource.volume =
-                savedMusicVolume;
-        }
-    }
-
-    public void LoseLife()
-    {
-        if (gameFinished || lives <= 0)
-        {
-            return;
-        }
-
-        lives--;
-
-        Debug.Log("LIFE LOST! Lives remaining: " + lives);
-
-        if (lives == 2 && life3 != null)
-        {
-            life3.gameObject.SetActive(false);
-        }
-        else if (lives == 1 && life2 != null)
-        {
-            life2.gameObject.SetActive(false);
-        }
-        else if (lives == 0 && life1 != null)
-        {
-            life1.gameObject.SetActive(false);
-        }
-
-        if (carSoundSource != null &&
-            sounds != null &&
-            sounds.Length > 14 &&
-            sounds[14] != null)
-        {
-            carSoundSource.PlayOneShot(sounds[14]);
-        }
+                musicVolume;
     }
 }
