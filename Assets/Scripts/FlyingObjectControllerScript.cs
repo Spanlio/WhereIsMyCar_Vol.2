@@ -84,9 +84,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
         // =====================================================
         // BOMB + CURSOR
         // =====================================================
-        // Bombs can still be detonated by the cursor when NO car
-        // is being dragged. While dragging, bomb damage is handled
-        // by CheckBombVsDraggedCar() instead.
 
         if (CompareTag("Bomb"))
         {
@@ -104,9 +101,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
         // =====================================================
         // CLOUD / AIRPLANE + CURSOR
         // =====================================================
-        // This is the old behaviour that allows the cursor to
-        // crash/delete a cloud or airplane while dragging a car.
-        // Bombs are intentionally excluded from this block.
 
         if (!CompareTag("Bomb") &&
             GameObjectsScript.isDragging &&
@@ -121,19 +115,32 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
             GameObject car = GameObjectsScript.lastDragged;
 
-            // Currently crashing into a cloud/airplane destroys
-            // the car being dragged, matching the previous game
-            // behaviour. We can later turn this into a score/win
-            // condition without changing the collision itself.
+            // A cloud/airplane crash counts as one destroyed car.
+            // The same car cannot be counted twice.
+            gameObjectsScript.RegisterCarDestroyed(car);
+
+            // Stop the drag immediately.
+            GameObjectsScript.lastDragged = null;
+            GameObjectsScript.isDragging = false;
+
+            // If this was the 4th destroyed car, DNF has already
+            // ended the game. Destroy the car immediately so it
+            // cannot remain half-shrunk behind the end panel.
+            if (gameObjectsScript.GameFinished)
+            {
+                if (car != null)
+                    Destroy(car);
+
+                StartAndDestroy(Color.cyan);
+                return;
+            }
+
             StartCoroutine(
                 ShrinkAndDestroy(
                     car,
                     0.5f
                 )
             );
-
-            GameObjectsScript.lastDragged = null;
-            GameObjectsScript.isDragging = false;
 
             StartAndDestroy(Color.cyan);
         }
@@ -266,9 +273,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
     // =========================================================
     // CLOUD / AIRPLANE PHYSICAL COLLISION
     // =========================================================
-    // Keeps the previous life-loss collision if the actual flying
-    // object overlaps the dragged car. Cursor collision above is
-    // separate from this.
 
     void CheckCarCollision()
     {
