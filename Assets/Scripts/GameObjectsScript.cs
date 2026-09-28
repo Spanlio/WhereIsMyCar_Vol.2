@@ -123,7 +123,6 @@ public class GameObjectsScript : MonoBehaviour
         int hours = Mathf.FloorToInt(gameTime / 3600f);
         int minutes = Mathf.FloorToInt((gameTime % 3600f) / 60f);
         int seconds = Mathf.FloorToInt(gameTime % 60f);
-
         timerText.text = string.Format("{0:00}:{1:00}:{2:00}", hours, minutes, seconds);
     }
 
@@ -157,6 +156,7 @@ public class GameObjectsScript : MonoBehaviour
         gameFinished = true;
         lastDragged = null;
         isDragging = false;
+        FreezeGameplay();
 
         int score = CalculateScore();
         string formattedTime = FormatTime(gameTime);
@@ -206,12 +206,29 @@ public class GameObjectsScript : MonoBehaviour
         gameFinished = true;
         lastDragged = null;
         isDragging = false;
+        FreezeGameplay();
 
         string formattedTime = FormatTime(gameTime);
         Debug.Log("GAME OVER! All hearts lost.");
 
         if (endGamePanel != null)
             endGamePanel.ShowLose(formattedTime);
+    }
+
+    private void FreezeGameplay()
+    {
+        // Stop every gameplay animator that could keep rotating/animating.
+        Animator[] animators = FindObjectsByType<Animator>(FindObjectsSortMode.None);
+        foreach (Animator animator in animators)
+        {
+            if (animator != null)
+                animator.enabled = false;
+        }
+
+        // Clear all drag state immediately.
+        lastDragged = null;
+        isDragging = false;
+        inRightPlace = false;
     }
 
     private int CalculateScore()
