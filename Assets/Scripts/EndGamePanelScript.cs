@@ -11,6 +11,7 @@ public class EndGamePanelScript : MonoBehaviour
     [Header("Text")]
     public TMP_Text titleText;
     public TMP_Text timeText;
+    public TMP_Text resultMessageText;
 
     [Header("Stars")]
     public Image[] stars = new Image[3];
@@ -42,6 +43,9 @@ public class EndGamePanelScript : MonoBehaviour
         if (timeText != null)
             timeText.text = "Time: " + formattedTime;
 
+        if (resultMessageText != null)
+            resultMessageText.text = "Nice work! The cars survived the chaos.";
+
         SetStars(score);
         Show();
     }
@@ -53,6 +57,27 @@ public class EndGamePanelScript : MonoBehaviour
 
         if (timeText != null)
             timeText.text = "Time: " + formattedTime;
+
+        if (resultMessageText != null)
+            resultMessageText.text = "You ran out of hearts.";
+
+        SetStars(0);
+        Show();
+    }
+
+    public void ShowDNF(string formattedTime)
+    {
+        if (titleText != null)
+            titleText.text = "DNF";
+
+        if (timeText != null)
+            timeText.text = "Time: " + formattedTime;
+
+        if (resultMessageText != null)
+        {
+            resultMessageText.text =
+                "4 cars down. At this point, the cars are trying to escape you.";
+        }
 
         SetStars(0);
         Show();
