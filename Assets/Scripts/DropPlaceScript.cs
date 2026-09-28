@@ -17,295 +17,208 @@ public class DropPlaceScript : MonoBehaviour, IDropHandler
 
     public void OnDrop(PointerEventData eventData)
     {
-        if ((eventData.pointerDrag != null) &&
-            Input.GetMouseButtonUp(0) &&
-            (!Input.GetMouseButton(2)))
+        if (gameObjectsScript == null || gameObjectsScript.GameFinished)
+            return;
+
+        if (eventData.pointerDrag == null ||
+            !Input.GetMouseButtonUp(0) ||
+            Input.GetMouseButton(2))
+            return;
+
+        if (!eventData.pointerDrag.CompareTag(tag))
         {
-            if (eventData.pointerDrag.tag.Equals(tag))
-            {
-                placeZRot =
-                    eventData.pointerDrag.GetComponent<RectTransform>().transform.eulerAngles.z;
+            gameObjectsScript.inRightPlace = false;
+            PlayWrongPlacementSound();
+            ReturnCarToStart(eventData.pointerDrag);
+            return;
+        }
 
-                carZRot =
-                    GetComponent<RectTransform>().transform.eulerAngles.z;
+        RectTransform draggedRect =
+            eventData.pointerDrag.GetComponent<RectTransform>();
 
-                diffZRot = Mathf.Abs(placeZRot - carZRot);
+        RectTransform placeRect =
+            GetComponent<RectTransform>();
 
-                Debug.Log("Diff Z Rot: " + diffZRot);
+        if (draggedRect == null || placeRect == null)
+            return;
 
-                placeSize =
-                    eventData.pointerDrag.GetComponent<RectTransform>().localScale;
+        placeZRot = placeRect.eulerAngles.z;
+        carZRot = draggedRect.eulerAngles.z;
 
-                carSize =
-                    GetComponent<RectTransform>().localScale;
+        // DeltaAngle correctly handles 359° vs 1° as a 2° difference.
+        diffZRot = Mathf.Abs(Mathf.DeltaAngle(carZRot, placeZRot));
 
-                xSizeDiff = Mathf.Abs(placeSize.x - carSize.x);
-                ySizeDiff = Mathf.Abs(placeSize.y - carSize.y);
+        placeSize = draggedRect.localScale;
+        carSize = placeRect.localScale;
 
-                Debug.Log("Diff X Size: " + xSizeDiff);
-                Debug.Log("Diff Y Size: " + ySizeDiff);
+        xSizeDiff = Mathf.Abs(placeSize.x - carSize.x);
+        ySizeDiff = Mathf.Abs(placeSize.y - carSize.y);
 
-                if ((diffZRot <= 7 ||
-                    (diffZRot >= 353 && diffZRot <= 360)) &&
-                    (xSizeDiff <= 0.08f && ySizeDiff <= 0.08f))
-                {
-                    Debug.Log("Car placed correctly!");
+        Debug.Log("Diff Z Rot: " + diffZRot);
+        Debug.Log("Diff X Size: " + xSizeDiff);
+        Debug.Log("Diff Y Size: " + ySizeDiff);
 
-                    gameObjectsScript.inRightPlace = true;
+        bool correctRotation = diffZRot <= 7f;
+        bool correctSize = xSizeDiff <= 0.08f && ySizeDiff <= 0.08f;
 
-                    gameObjectsScript.RegisterCorrectPlacement(eventData.pointerDrag);
+        if (correctRotation && correctSize)
+        {
+            Debug.Log("Car placed correctly!");
 
-                    // Get the dragged object's RectTransform
-                    RectTransform draggedObject =
-                        eventData.pointerDrag.GetComponent<RectTransform>();
+            gameObjectsScript.inRightPlace = true;
+            gameObjectsScript.RegisterCorrectPlacement(eventData.pointerDrag);
 
-                    // Move object to correct position
-                    draggedObject.anchoredPosition =
-                        GetComponent<RectTransform>().anchoredPosition;
+            // The final car can trigger WinGame(), so do not start any
+            // movement animation after the game has already ended.
+            draggedRect.anchoredPosition = placeRect.anchoredPosition;
+            draggedRect.localScale = placeRect.localScale;
+            draggedRect.localRotation = placeRect.localRotation;
 
-                    // Match size
-                    draggedObject.localScale =
-                        GetComponent<RectTransform>().localScale;
+            PlayCorrectPlacementSound(eventData.pointerDrag.tag);
 
-                    // Match rotation
-                    draggedObject.localRotation =
-                        GetComponent<RectTransform>().localRotation;
+            if (!gameObjectsScript.GameFinished)
+                StartCoroutine(CorrectPlacementBounce(draggedRect));
+        }
+        else
+        {
+            gameObjectsScript.inRightPlace = false;
+            PlayWrongPlacementSound();
+            ReturnCarToStart(eventData.pointerDrag);
+        }
+    }
 
-                    // BOUNCE TWICE
-                    StartCoroutine(CorrectPlacementBounce(draggedObject));
+    private void PlayWrongPlacementSound()
+    {
+        if (gameObjectsScript.carSoundSource != null &&
+            gameObjectsScript.sounds != null &&
+            gameObjectsScript.sounds.Length > 4 &&
+            gameObjectsScript.sounds[4] != null)
+        {
+            gameObjectsScript.carSoundSource.PlayOneShot(
+                gameObjectsScript.sounds[4]
+            );
+        }
+    }
 
-                    // CORRECT PLACEMENT SOUNDS
-                    switch (eventData.pointerDrag.tag)
-                    {
-                        // Existing objects
-                        case "Garbage":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[1]);
-                            break;
+    private void PlayCorrectPlacementSound(string tagName)
+    {
+        if (gameObjectsScript.carSoundSource == null ||
+            gameObjectsScript.sounds == null)
+            return;
 
-                        case "Ambulance":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[2]);
-                            break;
+        int soundIndex = -1;
 
-                        case "School":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[3]);
-                            break;
+        switch (tagName)
+        {
+            case "Garbage": soundIndex = 1; break;
+            case "Ambulance": soundIndex = 2; break;
+            case "School": soundIndex = 3; break;
+            case "B2": soundIndex = 5; break;
+            case "CementaMasina": soundIndex = 6; break;
+            case "E46": soundIndex = 7; break;
+            case "E61": soundIndex = 8; break;
+            case "Ekskavators": soundIndex = 9; break;
+            case "Policija": soundIndex = 10; break;
+            case "Traktors1": soundIndex = 11; break;
+            case "Traktors5": soundIndex = 12; break;
+            case "Ugunsdzeseji": soundIndex = 13; break;
+        }
 
-                        // New objects
-                        case "B2":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[5]);
-                            break;
+        if (soundIndex >= 0 && soundIndex < gameObjectsScript.sounds.Length &&
+            gameObjectsScript.sounds[soundIndex] != null)
+        {
+            gameObjectsScript.carSoundSource.PlayOneShot(
+                gameObjectsScript.sounds[soundIndex]
+            );
+        }
+    }
 
-                        case "CementaMasina":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[6]);
-                            break;
-
-                        case "E46":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[7]);
-                            break;
-
-                        case "E61":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[8]);
-                            break;
-
-                        case "Ekskavators":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[9]);
-                            break;
-
-                        case "Policija":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[10]);
-                            break;
-
-                        case "Traktors1":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[11]);
-                            break;
-
-                        case "Traktors5":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[12]);
-                            break;
-
-                        case "Ugunsdzeseji":
-                            gameObjectsScript.carSoundSource.PlayOneShot(
-                                gameObjectsScript.sounds[13]);
-                            break;
-
-                        default:
-                            Debug.Log(
-                                "No matching tag found for the dropped object.");
-                            break;
-                    }
-                }
-            }
-            else
-            {
-                gameObjectsScript.inRightPlace = false;
-
-                // WRONG PLACEMENT SOUND
-                gameObjectsScript.carSoundSource.PlayOneShot(
-                    gameObjectsScript.sounds[4]);
-
-                // RETURN OBJECT TO STARTING POSITION
-                switch (eventData.pointerDrag.name)
-                {
-                    // Existing objects
-                    case "GarbageTruck":
-                        gameObjectsScript.garbageTruck
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.garbageTruckCoord;
-                        break;
-
-                    case "Medicine":
-                        gameObjectsScript.medicine
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.medicineCoord;
-                        break;
-
-                    case "SchoolBus":
-                        gameObjectsScript.schoolBus
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.schoolBusCoord;
-                        break;
-
-                    // New objects
-                    case "b2":
-                        gameObjectsScript.b2
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.b2Coord;
-                        break;
-
-                    case "CementaMasina":
-                        gameObjectsScript.cementaMasina
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.cementaMasinaCoord;
-                        break;
-
-                    case "e46":
-                        gameObjectsScript.e46
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.e46Coord;
-                        break;
-
-                    case "e61":
-                        gameObjectsScript.e61
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.e61Coord;
-                        break;
-
-                    case "Ekskavators":
-                        gameObjectsScript.ekskavators
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.ekskavatorsCoord;
-                        break;
-
-                    case "Policija":
-                        gameObjectsScript.policija
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.policijaCoord;
-                        break;
-
-                    case "Traktors1":
-                        gameObjectsScript.traktors1
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.traktors1Coord;
-                        break;
-
-                    case "Traktors5":
-                        gameObjectsScript.traktors5
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.traktors5Coord;
-                        break;
-
-                    case "Ugunsdzeseji":
-                        gameObjectsScript.ugunsdzeseji
-                            .GetComponent<RectTransform>()
-                            .localPosition =
-                            gameObjectsScript.ugunsdzesejiCoord;
-                        break;
-
-                    default:
-                        Debug.Log(
-                            "No matching object found for the dropped object.");
-                        break;
-                }
-            }
+    private void ReturnCarToStart(GameObject car)
+    {
+        switch (car.name)
+        {
+            case "GarbageTruck":
+                gameObjectsScript.garbageTruck.GetComponent<RectTransform>().localPosition = gameObjectsScript.garbageTruckCoord;
+                break;
+            case "Medicine":
+                gameObjectsScript.medicine.GetComponent<RectTransform>().localPosition = gameObjectsScript.medicineCoord;
+                break;
+            case "SchoolBus":
+                gameObjectsScript.schoolBus.GetComponent<RectTransform>().localPosition = gameObjectsScript.schoolBusCoord;
+                break;
+            case "b2":
+                gameObjectsScript.b2.GetComponent<RectTransform>().localPosition = gameObjectsScript.b2Coord;
+                break;
+            case "CementaMasina":
+                gameObjectsScript.cementaMasina.GetComponent<RectTransform>().localPosition = gameObjectsScript.cementaMasinaCoord;
+                break;
+            case "e46":
+                gameObjectsScript.e46.GetComponent<RectTransform>().localPosition = gameObjectsScript.e46Coord;
+                break;
+            case "e61":
+                gameObjectsScript.e61.GetComponent<RectTransform>().localPosition = gameObjectsScript.e61Coord;
+                break;
+            case "Ekskavators":
+                gameObjectsScript.ekskavators.GetComponent<RectTransform>().localPosition = gameObjectsScript.ekskavatorsCoord;
+                break;
+            case "Policija":
+                gameObjectsScript.policija.GetComponent<RectTransform>().localPosition = gameObjectsScript.policijaCoord;
+                break;
+            case "Traktors1":
+                gameObjectsScript.traktors1.GetComponent<RectTransform>().localPosition = gameObjectsScript.traktors1Coord;
+                break;
+            case "Traktors5":
+                gameObjectsScript.traktors5.GetComponent<RectTransform>().localPosition = gameObjectsScript.traktors5Coord;
+                break;
+            case "Ugunsdzeseji":
+                gameObjectsScript.ugunsdzeseji.GetComponent<RectTransform>().localPosition = gameObjectsScript.ugunsdzesejiCoord;
+                break;
+            default:
+                Debug.Log("No matching object found for " + car.name);
+                break;
         }
     }
 
     IEnumerator CorrectPlacementBounce(RectTransform car)
     {
         Vector2 finalPosition = car.anchoredPosition;
-
         float bounceHeight = 25f;
         float bounceDuration = 0.18f;
 
-        // Two bounces
         for (int i = 0; i < 2; i++)
         {
-            // BOUNCE UP
             float time = 0f;
-
             while (time < bounceDuration)
             {
+                if (gameObjectsScript == null || gameObjectsScript.GameFinished)
+                    yield break;
+
                 time += Time.deltaTime;
-
-                float t = time / bounceDuration;
-
-                // Smooth movement
-                t = Mathf.Sin(t * Mathf.PI * 0.5f);
-
+                float t = Mathf.Sin((time / bounceDuration) * Mathf.PI * 0.5f);
                 car.anchoredPosition = Vector2.Lerp(
                     finalPosition,
                     finalPosition + Vector2.up * bounceHeight,
-                    t
-                );
-
+                    t);
                 yield return null;
             }
 
-            // BOUNCE DOWN
             time = 0f;
-
             while (time < bounceDuration)
             {
+                if (gameObjectsScript == null || gameObjectsScript.GameFinished)
+                    yield break;
+
                 time += Time.deltaTime;
-
-                float t = time / bounceDuration;
-
-                // Smooth movement
-                t = 1f - Mathf.Cos(t * Mathf.PI * 0.5f);
-
+                float t = 1f - Mathf.Cos((time / bounceDuration) * Mathf.PI * 0.5f);
                 car.anchoredPosition = Vector2.Lerp(
                     finalPosition + Vector2.up * bounceHeight,
                     finalPosition,
-                    t
-                );
-
+                    t);
                 yield return null;
             }
         }
 
-        // Make absolutely sure the car ends at its correct position
-        car.anchoredPosition = finalPosition;
+        if (gameObjectsScript != null && !gameObjectsScript.GameFinished)
+            car.anchoredPosition = finalPosition;
     }
 }
