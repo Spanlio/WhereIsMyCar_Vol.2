@@ -10,10 +10,12 @@ public class BombBoomerangScript : MonoBehaviour
 
     private RectTransform rectTransform;
     private Vector2 startPosition;
+    private GameObjectsScript gameObjectsScript;
 
     private void Start()
     {
         rectTransform = GetComponent<RectTransform>();
+        gameObjectsScript = Object.FindFirstObjectByType<GameObjectsScript>();
 
         if (rectTransform == null)
         {
@@ -23,62 +25,37 @@ public class BombBoomerangScript : MonoBehaviour
 
         startPosition = rectTransform.anchoredPosition;
 
-        StartCoroutine(Boomerang());
+        if (gameObjectsScript == null || !gameObjectsScript.GameFinished)
+            StartCoroutine(Boomerang());
     }
 
     private IEnumerator Boomerang()
     {
-        // --------------------------------
-        // DIVE DOWN
-        // --------------------------------
-
-        Vector2 divePosition =
-            startPosition + Vector2.down * diveDistance;
-
+        Vector2 divePosition = startPosition + Vector2.down * diveDistance;
         float time = 0f;
 
         while (time < diveDuration)
         {
+            if (gameObjectsScript != null && gameObjectsScript.GameFinished)
+                yield break;
+
             time += Time.deltaTime;
-
-            float t = time / diveDuration;
-
-            t = Mathf.SmoothStep(0f, 1f, t);
-
-            rectTransform.anchoredPosition =
-                Vector2.Lerp(
-                    startPosition,
-                    divePosition,
-                    t
-                );
-
+            float t = Mathf.SmoothStep(0f, 1f, time / diveDuration);
+            rectTransform.anchoredPosition = Vector2.Lerp(startPosition, divePosition, t);
             yield return null;
         }
 
         rectTransform.anchoredPosition = divePosition;
-
-
-        // --------------------------------
-        // RETURN
-        // --------------------------------
-
         time = 0f;
 
         while (time < returnDuration)
         {
+            if (gameObjectsScript != null && gameObjectsScript.GameFinished)
+                yield break;
+
             time += Time.deltaTime;
-
-            float t = time / returnDuration;
-
-            t = Mathf.SmoothStep(0f, 1f, t);
-
-            rectTransform.anchoredPosition =
-                Vector2.Lerp(
-                    divePosition,
-                    startPosition,
-                    t
-                );
-
+            float t = Mathf.SmoothStep(0f, 1f, time / returnDuration);
+            rectTransform.anchoredPosition = Vector2.Lerp(divePosition, startPosition, t);
             yield return null;
         }
 
