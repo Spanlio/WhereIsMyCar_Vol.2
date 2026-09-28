@@ -84,7 +84,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
         Debug.Log("Cursor hit flying object: " + gameObject.name + " with car: " + car.name);
 
-        // Cloud/airplane crash: destroyed car + one heart.
         gameObjectsScript.RegisterCarDestroyed(car);
         gameObjectsScript.LoseLife();
 
@@ -156,7 +155,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
         Debug.Log("BOMB HIT DRAGGED CAR: " + car.name);
 
-        // Bomb collision also destroys the car and costs one heart.
         gameObjectsScript.RegisterCarDestroyed(car);
         gameObjectsScript.LoseLife();
 
@@ -171,7 +169,10 @@ public class FlyingObjectControllerScript : MonoBehaviour
         }
 
         Destroy(car);
-        StartAndDestroy(Color.red);
+
+        // Use the real bomb explosion path instead of StartAndDestroy.
+        // This is what starts the Animator's bombExplode animation.
+        TriggerExplosion();
     }
 
     void CheckCarCollision()
@@ -238,7 +239,17 @@ public class FlyingObjectControllerScript : MonoBehaviour
             gameObjectsScript.carSoundSource.PlayOneShot(gameObjectsScript.sounds[6], 5f);
 
         Animator animator = GetComponent<Animator>();
-        if (animator != null) animator.SetBool("explode", true);
+
+        if (animator != null)
+        {
+            // The existing Animator setup uses this bool to enter bombExplode.
+            animator.SetBool("explode", true);
+
+            // Also force the named state when it exists. This prevents the
+            // bomb from remaining in idle because of a transition mismatch.
+            if (HasAnimatorState(animator, "bombExplode"))
+                animator.Play("bombExplode", 0, 0f);
+        }
 
         if (image != null)
         {
@@ -250,6 +261,23 @@ public class FlyingObjectControllerScript : MonoBehaviour
         StartCoroutine(WaitBeforeExplode());
     }
 
+    bool HasAnimatorState(Animator animator, string stateName)
+    {
+        if (animator == null || animator.runtimeAnimatorController == null)
+            return false;
+
+        for (int layer = 0; layer < animator.layerCount; layer++)
+        {
+            int shortNameHash = Animator.StringToHash(stateName);
+            int fullPathHash = Animator.StringToHash(animator.GetLayerName(layer) + "." + stateName);
+
+            if (animator.HasState(layer, shortNameHash) || animator.HasState(layer, fullPathHash))
+                return true;
+        }
+
+        return false;
+    }
+
     IEnumerator WaitBeforeExplode()
     {
         float radius = 0f;
@@ -257,6 +285,7 @@ public class FlyingObjectControllerScript : MonoBehaviour
         if (circle != null) radius = circle.radius * transform.localScale.x;
 
         ExplodeAndDestroyNearbyObjects(radius);
+
         yield return new WaitForSeconds(1f);
 
         if (gameObjectsScript != null && gameObjectsScript.GameFinished) yield break;
