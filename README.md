@@ -12,6 +12,22 @@ Lai spēle katrā reizē būtu citādāka, transportlīdzekļu un galamērķu s�
 
 Transportlīdzekļiem ir 17 iespējamie spawn punkti, no kuriem katras spēles sākumā tiek izvēlēti 12. Galamērķiem ir vēl 17 pilnīgi atsevišķi spawn punkti, no kuriem arī tiek izvēlēti 12.
 
+## Ekrānšāviņi
+
+### Sākuma ekrāns
+
+![Sākuma ekrāns](Screenshots/start-scene.png)
+
+### Spēles laukums
+
+![Spēles laukums](Screenshots/gameplay.png)
+
+### Spēles beigu panelis
+
+![Spēles beigu panelis](Screenshots/end-game.png)
+
+> Piezīme: ekrānšāviņi jāievieto repozitorija `Screenshots` mapē ar nosaukumiem `start-scene.png`, `gameplay.png` un `end-game.png`.
+
 ## Transportlīdzekļi
 
 Spēlē ir 12 transportlīdzekļi:
@@ -41,9 +57,30 @@ Spēlē ir 12 transportlīdzekļi:
 - Transportlīdzekļu pagriešana
 - Transportlīdzekļu izmēra maiņa
 - Horizontāla apgriešana
+- Nejauša horizontāla transportlīdzekļu un galamērķu apgriešana
 - Pareizas un nepareizas vietas pārbaude
+- Dzīvības sistēma
+- Bombas un lidojošie objekti
+- Iznīcinātu transportlīdzekļu uzskaite
+- Zvaigžņu vērtējums
+- DNF beigu nosacījums
+- Uzvaras un zaudējuma beigu panelis
+- Spēles atkārtota sākšana un atgriešanās uz sākuma izvēlni
 - Skaņas efekti
 - Neliels nejaušs rotācijas leņķis katras spēles sākumā
+
+## Spēles beigu nosacījumi
+
+Spēlē tiek izmantotas 3 dzīvības. Sadursmes ar bumbām, mākoņiem un lidmašīnām var samazināt dzīvību un iznīcināt pašlaik pārvietoto transportlīdzekli.
+
+Transportlīdzekļu iznīcināšana ietekmē arī gala vērtējumu:
+
+- 0 iznīcināti transportlīdzekļi — iespējamas līdz 3 zvaigznēm
+- 1 iznīcināts transportlīdzeklis — maksimums 2 zvaigznes
+- 2 vai 3 iznīcināti transportlīdzekļi — maksimums 1 zvaigzne
+- 4 iznīcināti transportlīdzekļi — DNF
+
+Ja visi atlikušie transportlīdzekļi ir novietoti pareizajās vietās, spēlētājs uzvar.
 
 ## Kā darbojas randomizācija
 
@@ -55,11 +92,15 @@ No 17 `CarsSpawnPoints` punktiem nejauši tiek izvēlēti 12. Katrs no 12 transp
 
 Vienā spēles reizē viens spawn punkts nevar tikt izmantots vairāk nekā vienam transportlīdzeklim.
 
+Katram transportlīdzeklim ir 50% iespēja tikt horizontāli apgrieztam.
+
 ### Galamērķi
 
 No 17 `PlaceSpawnPoints` punktiem neatkarīgi tiek izvēlēti 12. Katrs no 12 baltajiem galamērķa objektiem tiek novietots savā punktā.
 
 Vienā spēles reizē viens galamērķa spawn punkts nevar tikt izmantots vairāk nekā vienam objektam.
+
+Katram galamērķim ir 50% iespēja tikt horizontāli apgrieztam.
 
 Transportlīdzekļa un galamērķa savstarpējā saistība netiek randomizēta. To nosaka to tagi.
 
@@ -99,7 +140,7 @@ Tas nozīmē, ka `Policija` transportlīdzeklis ir paredzēts `PolicijaVieta` ob
 
 ### `GameObjectsScript`
 
-Pārvalda galvenos spēles objektus un to nejaušo izvietošanu spēles sākumā.
+Pārvalda galvenos spēles objektus, spēles stāvokli, dzīvības, uzvaras/zaudējuma nosacījumus, transportlīdzekļu iznīcināšanu un to nejaušo izvietošanu spēles sākumā.
 
 ### `DragAndDropScript`
 
@@ -112,6 +153,14 @@ Pārbauda, vai transportlīdzeklis ir novietots pareizajā vietā. Pārbaude tie
 ### `ObjectTransformationScript`
 
 Atbild par transportlīdzekļa rotāciju, izmēra maiņu un horizontālo apgriešanu.
+
+### `FlyingObjectControllerScript`
+
+Pārvalda lidojošos objektus, bumbas, sadursmes ar transportlīdzekļiem un bumbu sprādziena animāciju.
+
+### `EndGamePanelScript`
+
+Pārvalda uzvaras, zaudējuma un DNF beigu paneli, zvaigžņu attēlojumu, atkārtotu spēles sākšanu un atgriešanos uz sākuma izvēlni.
 
 ### `ScreenBoundariesScript`
 
@@ -169,20 +218,24 @@ Canvas
 
 ## TODO
 
-- [ ] Pabeigt un pārbaudīt randomizācijas sistēmu
-- [ ] Pārbaudīt visus 12 transportlīdzekļus
-- [ ] Pārbaudīt visus 12 galamērķa objektus
-- [ ] Pārbaudīt, ka viens spawn punkts netiek izmantots vairākas reizes
-- [ ] Pārbaudīt, ka transportlīdzeklis nepareizas novietošanas gadījumā atgriežas savā nejauši izvēlētajā sākuma pozīcijā
+- [x] Pabeigt un pārbaudīt randomizācijas sistēmu
+- [x] Pārbaudīt visus 12 transportlīdzekļus
+- [x] Pārbaudīt visus 12 galamērķa objektus
+- [x] Pārbaudīt, ka viens spawn punkts netiek izmantots vairākas reizes
+- [x] Pārbaudīt, ka transportlīdzeklis nepareizas novietošanas gadījumā atgriežas savā nejauši izvēlētajā sākuma pozīcijā
 - [ ] Pārbaudīt visus skaņas efektus
-- [ ] Uzlabot pareizas novietošanas pārbaudi
+- [x] Uzlabot pareizas novietošanas pārbaudi
 - [ ] Pārbaudīt spēli uz dažādām ekrāna izšķirtspējām
 - [ ] Veikt gala testēšanu
-- [ ] Novērst atlikušās kļūdas
+- [x] Novērst galvenās spēles kļūdas
+- [x] Pievienot uzvaras un zaudējuma paneli
+- [x] Pievienot zvaigžņu vērtējumu
+- [x] Pievienot DNF nosacījumu
+- [x] Pievienot iespēju atkārtot spēli un atgriezties sākuma izvēlnē
 
 ## Projekta statuss
 
-Projekts atrodas izstrādes procesā. Spēles galvenā mehānika, transportlīdzekļu pārvietošana, objektu pārveidošana, pareizās vietas pārbaude un nejaušā objektu izvietošana tiek izstrādāta vienotā sistēmā.
+Projekts atrodas izstrādes noslēguma posmā. Spēles galvenā mehānika, transportlīdzekļu pārvietošana, objektu pārveidošana, pareizās vietas pārbaude, nejaušā objektu izvietošana, dzīvību sistēma un spēles beigu nosacījumi ir izstrādāti.
 
 ## Autors
 
