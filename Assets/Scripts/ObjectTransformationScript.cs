@@ -4,79 +4,125 @@ public class ObjectTransformationScript : MonoBehaviour
 {
     public GameObjectsScript gameObjectsScript;
 
-
     void Awake()
     {
         gameObjectsScript = FindFirstObjectByType<GameObjectsScript>();
     }
 
-
     void Update()
     {
-        if (GameObjectsScript.lastDragged != null)
+        if (GameObjectsScript.lastDragged == null)
+            return;
+
+        RectTransform rect =
+            GameObjectsScript.lastDragged.GetComponent<RectTransform>();
+
+        if (rect == null)
+            return;
+
+        // Rotate counter-clockwise
+        if (Input.GetKey(KeyCode.Z))
         {
-            if(Input.GetKey(KeyCode.Z))
-            {
-                GameObjectsScript.lastDragged.GetComponent<RectTransform>().Rotate(
-                    0, 0, Time.deltaTime * 12);
-            }
+            rect.Rotate(
+                0f,
+                0f,
+                Time.deltaTime * 12f
+            );
+        }
 
-            if(Input.GetKey(KeyCode.X))
-            {
-                GameObjectsScript.lastDragged.GetComponent<RectTransform>().Rotate(
-                    0, 0, -Time.deltaTime * 12);
-            }
+        // Rotate clockwise
+        if (Input.GetKey(KeyCode.X))
+        {
+            rect.Rotate(
+                0f,
+                0f,
+                -Time.deltaTime * 12f
+            );
+        }
 
-            if (Input.GetKey(KeyCode.UpArrow))
+        // Increase/decrease HEIGHT
+        // Mathf.Abs() makes this work whether the object
+        // is normally oriented or flipped.
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            if (Mathf.Abs(rect.localScale.y) < 0.9f)
             {
-                if(GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.y < 0.9f)
-                {
-                    GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale =
-                    new Vector3(GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.x,
-                    GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.y + 0.001f, 1f);
-                }
-            }
+                float sign = Mathf.Sign(rect.localScale.y);
 
-            if (Input.GetKey(KeyCode.DownArrow))
-            {
-                if (GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.y > 0.3f)
-                {
-                    GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale =
-                    new Vector3(GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.x,
-                    GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.y - 0.001f, 1f);
-                }
-            }
-
-            if (Input.GetKey(KeyCode.LeftArrow))
-            {
-                if (GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.x > 0.3f)
-                {
-                    GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale =
-                    new Vector3(GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.x - 0.001f,
-                    GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.y, 1f);
-                }
-            }
-
-            if (Input.GetKey(KeyCode.RightArrow))
-            {
-                if (GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.x < 0.9f)
-                {
-                    GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale =
-                    new Vector3(GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.x + 0.001f,
-                    GameObjectsScript.lastDragged.GetComponent<RectTransform>().localScale.y, 1f);
-                }
-            }
-
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                RectTransform rect = GameObjectsScript.lastDragged.GetComponent<RectTransform>();
+                if (sign == 0f)
+                    sign = 1f;
 
                 rect.localScale = new Vector3(
-                    -rect.localScale.x,
+                    rect.localScale.x,
+                    sign * (Mathf.Abs(rect.localScale.y) + 0.001f),
+                    rect.localScale.z
+                );
+            }
+        }
+
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+            if (Mathf.Abs(rect.localScale.y) > 0.3f)
+            {
+                float sign = Mathf.Sign(rect.localScale.y);
+
+                if (sign == 0f)
+                    sign = 1f;
+
+                rect.localScale = new Vector3(
+                    rect.localScale.x,
+                    sign * (Mathf.Abs(rect.localScale.y) - 0.001f),
+                    rect.localScale.z
+                );
+            }
+        }
+
+        // Increase/decrease WIDTH
+        // This specifically handles the negative X produced
+        // by the Spacebar flip.
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            if (Mathf.Abs(rect.localScale.x) > 0.3f)
+            {
+                float sign = Mathf.Sign(rect.localScale.x);
+
+                if (sign == 0f)
+                    sign = 1f;
+
+                rect.localScale = new Vector3(
+                    sign * (Mathf.Abs(rect.localScale.x) - 0.001f),
                     rect.localScale.y,
                     rect.localScale.z
                 );
             }
+        }
+
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            if (Mathf.Abs(rect.localScale.x) < 0.9f)
+            {
+                float sign = Mathf.Sign(rect.localScale.x);
+
+                if (sign == 0f)
+                    sign = 1f;
+
+                rect.localScale = new Vector3(
+                    sign * (Mathf.Abs(rect.localScale.x) + 0.001f),
+                    rect.localScale.y,
+                    rect.localScale.z
+                );
+            }
+        }
+
+        // Flip horizontally.
+        // KEEPING YOUR EXISTING BEHAVIOR.
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            rect.localScale = new Vector3(
+                -rect.localScale.x,
+                rect.localScale.y,
+                rect.localScale.z
+            );
         }
     }
 }

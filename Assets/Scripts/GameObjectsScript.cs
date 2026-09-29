@@ -85,13 +85,16 @@ public class GameObjectsScript : MonoBehaviour
     void Start()
     {
         Time.timeScale = 1f;
+
         lives = startingLives;
         destroyedCars = 0;
         gameTime = 0f;
         gameFinished = false;
+
         lastDragged = null;
         isDragging = false;
         inRightPlace = false;
+
         correctlyPlacedCars.Clear();
         destroyedCarObjects.Clear();
 
@@ -112,12 +115,14 @@ public class GameObjectsScript : MonoBehaviour
         gameTime += Time.deltaTime;
         UpdateTimerDisplay();
 
+        // DEBUG: Instant Lose
         if (Input.GetKeyDown(KeyCode.L))
         {
             Debug.Log("DEBUG: Instant Lose");
             LoseGame();
         }
 
+        // DEBUG: Instant Win
         if (Input.GetKeyDown(KeyCode.K))
         {
             Debug.Log("DEBUG: Instant Win");
@@ -133,7 +138,13 @@ public class GameObjectsScript : MonoBehaviour
         int hours = Mathf.FloorToInt(gameTime / 3600f);
         int minutes = Mathf.FloorToInt((gameTime % 3600f) / 60f);
         int seconds = Mathf.FloorToInt(gameTime % 60f);
-        timerText.text = string.Format("{0:00}:{1:00}:{2:00}", hours, minutes, seconds);
+
+        timerText.text = string.Format(
+            "{0:00}:{1:00}:{2:00}",
+            hours,
+            minutes,
+            seconds
+        );
     }
 
     public void RegisterCorrectPlacement(GameObject car)
@@ -144,7 +155,13 @@ public class GameObjectsScript : MonoBehaviour
         if (!correctlyPlacedCars.Contains(car))
         {
             correctlyPlacedCars.Add(car);
-            Debug.Log("Correct cars: " + correctlyPlacedCars.Count + "/" + (TOTAL_CARS - destroyedCars));
+
+            Debug.Log(
+                "Correct cars: " +
+                correctlyPlacedCars.Count +
+                "/" +
+                (TOTAL_CARS - destroyedCars)
+            );
         }
 
         inRightPlace = true;
@@ -170,7 +187,14 @@ public class GameObjectsScript : MonoBehaviour
 
         destroyedCars++;
 
-        Debug.Log("CAR DESTROYED: " + car.name + " | Destroyed cars: " + destroyedCars + "/" + maxCarsBeforeDNF);
+        Debug.Log(
+            "CAR DESTROYED: " +
+            car.name +
+            " | Destroyed cars: " +
+            destroyedCars +
+            "/" +
+            maxCarsBeforeDNF
+        );
 
         if (destroyedCars > maxCarsBeforeDNF)
             DNFGame();
@@ -182,8 +206,10 @@ public class GameObjectsScript : MonoBehaviour
             return;
 
         gameFinished = true;
+
         lastDragged = null;
         isDragging = false;
+
         FreezeGameplay();
 
         int score = CalculateScore();
@@ -204,11 +230,23 @@ public class GameObjectsScript : MonoBehaviour
             return;
 
         lives--;
-        Debug.Log("LIFE LOST! Remaining: " + lives);
+
+        Debug.Log(
+            "LIFE LOST! Remaining: " +
+            lives
+        );
+
         UpdateLivesUI();
 
-        if (carSoundSource != null && sounds != null && sounds.Length > 14 && sounds[14] != null)
+        if (
+            carSoundSource != null &&
+            sounds != null &&
+            sounds.Length > 14 &&
+            sounds[14] != null
+        )
+        {
             carSoundSource.PlayOneShot(sounds[14]);
+        }
 
         if (lives <= 0)
             LoseGame();
@@ -216,16 +254,26 @@ public class GameObjectsScript : MonoBehaviour
 
     private void ResetLivesUI()
     {
-        if (life1 != null) life1.gameObject.SetActive(true);
-        if (life2 != null) life2.gameObject.SetActive(true);
-        if (life3 != null) life3.gameObject.SetActive(true);
+        if (life1 != null)
+            life1.gameObject.SetActive(true);
+
+        if (life2 != null)
+            life2.gameObject.SetActive(true);
+
+        if (life3 != null)
+            life3.gameObject.SetActive(true);
     }
 
     private void UpdateLivesUI()
     {
-        if (life1 != null) life1.gameObject.SetActive(lives >= 1);
-        if (life2 != null) life2.gameObject.SetActive(lives >= 2);
-        if (life3 != null) life3.gameObject.SetActive(lives >= 3);
+        if (life1 != null)
+            life1.gameObject.SetActive(lives >= 1);
+
+        if (life2 != null)
+            life2.gameObject.SetActive(lives >= 2);
+
+        if (life3 != null)
+            life3.gameObject.SetActive(lives >= 3);
     }
 
     private void LoseGame()
@@ -234,11 +282,14 @@ public class GameObjectsScript : MonoBehaviour
             return;
 
         gameFinished = true;
+
         lastDragged = null;
         isDragging = false;
+
         FreezeGameplay();
 
         string formattedTime = FormatTime(gameTime);
+
         Debug.Log("GAME OVER! All hearts lost.");
 
         if (endGamePanel != null)
@@ -251,8 +302,10 @@ public class GameObjectsScript : MonoBehaviour
             return;
 
         gameFinished = true;
+
         lastDragged = null;
         isDragging = false;
+
         FreezeGameplay();
 
         string formattedTime = FormatTime(gameTime);
@@ -266,7 +319,9 @@ public class GameObjectsScript : MonoBehaviour
 
     private void FreezeGameplay()
     {
-        Animator[] animators = FindObjectsByType<Animator>(FindObjectsSortMode.None);
+        Animator[] animators =
+            FindObjectsByType<Animator>(FindObjectsSortMode.None);
+
         foreach (Animator animator in animators)
         {
             if (animator != null)
@@ -305,15 +360,31 @@ public class GameObjectsScript : MonoBehaviour
         int hours = Mathf.FloorToInt(time / 3600f);
         int minutes = Mathf.FloorToInt((time % 3600f) / 60f);
         int seconds = Mathf.FloorToInt(time % 60f);
-        return string.Format("{0:00}:{1:00}:{2:00}", hours, minutes, seconds);
+
+        return string.Format(
+            "{0:00}:{1:00}:{2:00}",
+            hours,
+            minutes,
+            seconds
+        );
     }
 
     void RandomizeGame()
     {
         List<GameObject> cars = new List<GameObject>
         {
-            garbageTruck, medicine, schoolBus, b2, cementaMasina, e46,
-            e61, ekskavators, policija, traktors1, traktors5, ugunsdzeseji
+            garbageTruck,
+            medicine,
+            schoolBus,
+            b2,
+            cementaMasina,
+            e46,
+            e61,
+            ekskavators,
+            policija,
+            traktors1,
+            traktors5,
+            ugunsdzeseji
         };
 
         List<GameObject> places = new List<GameObject>();
@@ -322,38 +393,89 @@ public class GameObjectsScript : MonoBehaviour
         {
             for (int i = 0; i < placesContainer.childCount; i++)
             {
-                GameObject child = placesContainer.GetChild(i).gameObject;
+                GameObject child =
+                    placesContainer.GetChild(i).gameObject;
+
                 if (child.GetComponent<DropPlaceScript>() != null)
                     places.Add(child);
             }
         }
 
-        List<Transform> carSpawnPoints = GetDirectChildren(carsSpawnPointsContainer);
-        List<Transform> placeSpawnPoints = GetDirectChildren(placeSpawnPointsContainer);
+        List<Transform> carSpawnPoints =
+            GetDirectChildren(carsSpawnPointsContainer);
 
-        if (cars.Count != TOTAL_CARS || places.Count != TOTAL_CARS || carSpawnPoints.Count < TOTAL_CARS || placeSpawnPoints.Count < TOTAL_CARS)
+        List<Transform> placeSpawnPoints =
+            GetDirectChildren(placeSpawnPointsContainer);
+
+        if (
+            cars.Count != TOTAL_CARS ||
+            places.Count != TOTAL_CARS ||
+            carSpawnPoints.Count < TOTAL_CARS ||
+            placeSpawnPoints.Count < TOTAL_CARS
+        )
         {
-            Debug.LogError("Randomization setup does not contain the expected 12 cars, 12 places and enough spawn points.");
+            Debug.LogError(
+                "Randomization setup does not contain the expected 12 cars, 12 places and enough spawn points."
+            );
+
             return;
         }
 
         Shuffle(carSpawnPoints);
         Shuffle(placeSpawnPoints);
 
+        // CARS
         for (int i = 0; i < cars.Count; i++)
         {
-            RectTransform carRect = cars[i].GetComponent<RectTransform>();
-            if (carRect == null) continue;
-            carRect.position = carSpawnPoints[i].position;
-            carRect.localRotation = Quaternion.Euler(0f, 0f, Random.Range(-maxRandomRotation, maxRandomRotation));
+            RectTransform carRect =
+                cars[i].GetComponent<RectTransform>();
+
+            if (carRect == null)
+                continue;
+
+            carRect.position =
+                carSpawnPoints[i].position;
+
+            // Existing random Z rotation.
+            carRect.localRotation =
+                Quaternion.Euler(
+                    0f,
+                    0f,
+                    Random.Range(
+                        -maxRandomRotation,
+                        maxRandomRotation
+                    )
+                );
+
+            // 50% chance to horizontally flip the car.
+            RandomFlipX(carRect);
         }
 
+        // PLACES
         for (int i = 0; i < places.Count; i++)
         {
-            RectTransform placeRect = places[i].GetComponent<RectTransform>();
-            if (placeRect == null) continue;
-            placeRect.position = placeSpawnPoints[i].position;
-            placeRect.localRotation = Quaternion.Euler(0f, 0f, Random.Range(-maxRandomRotation, maxRandomRotation));
+            RectTransform placeRect =
+                places[i].GetComponent<RectTransform>();
+
+            if (placeRect == null)
+                continue;
+
+            placeRect.position =
+                placeSpawnPoints[i].position;
+
+            // Existing random Z rotation.
+            placeRect.localRotation =
+                Quaternion.Euler(
+                    0f,
+                    0f,
+                    Random.Range(
+                        -maxRandomRotation,
+                        maxRandomRotation
+                    )
+                );
+
+            // 50% chance to horizontally flip the place.
+            RandomFlipX(placeRect);
         }
 
         SaveCarStartingPositions();
@@ -361,9 +483,15 @@ public class GameObjectsScript : MonoBehaviour
 
     List<Transform> GetDirectChildren(Transform parent)
     {
-        List<Transform> result = new List<Transform>();
-        if (parent == null) return result;
-        for (int i = 0; i < parent.childCount; i++) result.Add(parent.GetChild(i));
+        List<Transform> result =
+            new List<Transform>();
+
+        if (parent == null)
+            return result;
+
+        for (int i = 0; i < parent.childCount; i++)
+            result.Add(parent.GetChild(i));
+
         return result;
     }
 
@@ -371,34 +499,97 @@ public class GameObjectsScript : MonoBehaviour
     {
         for (int i = list.Count - 1; i > 0; i--)
         {
-            int randomIndex = Random.Range(0, i + 1);
+            int randomIndex =
+                Random.Range(0, i + 1);
+
             T temp = list[i];
-            list[i] = list[randomIndex];
-            list[randomIndex] = temp;
+
+            list[i] =
+                list[randomIndex];
+
+            list[randomIndex] =
+                temp;
         }
     }
 
     void SaveCarStartingPositions()
     {
-        garbageTruckCoord = garbageTruck.GetComponent<RectTransform>().localPosition;
-        medicineCoord = medicine.GetComponent<RectTransform>().localPosition;
-        schoolBusCoord = schoolBus.GetComponent<RectTransform>().localPosition;
-        b2Coord = b2.GetComponent<RectTransform>().localPosition;
-        cementaMasinaCoord = cementaMasina.GetComponent<RectTransform>().localPosition;
-        e46Coord = e46.GetComponent<RectTransform>().localPosition;
-        e61Coord = e61.GetComponent<RectTransform>().localPosition;
-        ekskavatorsCoord = ekskavators.GetComponent<RectTransform>().localPosition;
-        policijaCoord = policija.GetComponent<RectTransform>().localPosition;
-        traktors1Coord = traktors1.GetComponent<RectTransform>().localPosition;
-        traktors5Coord = traktors5.GetComponent<RectTransform>().localPosition;
-        ugunsdzesejiCoord = ugunsdzeseji.GetComponent<RectTransform>().localPosition;
+        garbageTruckCoord =
+            garbageTruck.GetComponent<RectTransform>().localPosition;
+
+        medicineCoord =
+            medicine.GetComponent<RectTransform>().localPosition;
+
+        schoolBusCoord =
+            schoolBus.GetComponent<RectTransform>().localPosition;
+
+        b2Coord =
+            b2.GetComponent<RectTransform>().localPosition;
+
+        cementaMasinaCoord =
+            cementaMasina.GetComponent<RectTransform>().localPosition;
+
+        e46Coord =
+            e46.GetComponent<RectTransform>().localPosition;
+
+        e61Coord =
+            e61.GetComponent<RectTransform>().localPosition;
+
+        ekskavatorsCoord =
+            ekskavators.GetComponent<RectTransform>().localPosition;
+
+        policijaCoord =
+            policija.GetComponent<RectTransform>().localPosition;
+
+        traktors1Coord =
+            traktors1.GetComponent<RectTransform>().localPosition;
+
+        traktors5Coord =
+            traktors5.GetComponent<RectTransform>().localPosition;
+
+        ugunsdzesejiCoord =
+            ugunsdzeseji.GetComponent<RectTransform>().localPosition;
     }
 
     void ApplySavedAudioSettings()
     {
-        float soundVolume = PlayerPrefs.GetFloat("SoundVolume", 1f);
-        float musicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.3f);
-        if (carSoundSource != null) carSoundSource.volume = soundVolume;
-        if (musicSource != null) musicSource.volume = musicVolume;
+        float soundVolume =
+            PlayerPrefs.GetFloat(
+                "SoundVolume",
+                1f
+            );
+
+        float musicVolume =
+            PlayerPrefs.GetFloat(
+                "MusicVolume",
+                0.3f
+            );
+
+        if (carSoundSource != null)
+            carSoundSource.volume = soundVolume;
+
+        if (musicSource != null)
+            musicSource.volume = musicVolume;
+    }
+
+    // 50/50 horizontal flip.
+    // Uses X because this is the same axis used by Spacebar.
+    private void RandomFlipX(RectTransform rect)
+    {
+        if (rect == null)
+            return;
+
+        Vector3 scale = rect.localScale;
+
+        if (Random.value < 0.5f)
+        {
+            scale.x = -Mathf.Abs(scale.x);
+        }
+        else
+        {
+            scale.x = Mathf.Abs(scale.x);
+        }
+
+        rect.localScale = scale;
     }
 }
