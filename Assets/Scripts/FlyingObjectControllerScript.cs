@@ -43,14 +43,14 @@ public class FlyingObjectControllerScript : MonoBehaviour
         float waveOffset = Mathf.Sin(Time.time * waveFrequency) * waveAmplitude;
         rectTransform.anchoredPosition += new Vector2(-speed * Time.deltaTime, waveOffset * Time.deltaTime);
 
-        if (speed > 0 && transform.position.x < screenBoundariesScript.minX + 80 && !isFadingOut)
+        if (speed > 0 && transform.position.x < screenBoundariesScript.worldBounds.yMin + 80 && !isFadingOut)
         {
             isFadingOut = true;
             StartCoroutine(FadeOutAndDestroy());
             return;
         }
 
-        if (speed < 0 && transform.position.x > screenBoundariesScript.maxX - 80 && !isFadingOut)
+        if (speed < 0 && transform.position.x > screenBoundariesScript.worldBounds.yMin - 80 && !isFadingOut)
         {
             isFadingOut = true;
             StartCoroutine(FadeOutAndDestroy());
@@ -379,5 +379,21 @@ public class FlyingObjectControllerScript : MonoBehaviour
         }
 
         rectTransform.anchoredPosition = originalPosition;
+    }
+
+    bool TryGetInputPosition(out Vector2 inputPosition)
+    {
+        #if UNITY_EDITOR || UNITY_STANDALONE
+                inputPosition = Input.mousePosition;
+                return true;
+        #elif UNITY_ANDROID
+                if(Input.touchCount > 0){
+                    inputPosition = Input.GetTouch(0).position;
+                    return true;
+                }else{
+                    inputPosition = Vector2.zero;
+                    return false;
+                }
+        #endif
     }
 }

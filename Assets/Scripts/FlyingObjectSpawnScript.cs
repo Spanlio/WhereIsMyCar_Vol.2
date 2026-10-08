@@ -39,8 +39,8 @@ public class FlyingObjectSpawnScript : MonoBehaviour
             return;
         }
 
-        minY = screenBoundariesScript.minY;
-        maxY = screenBoundariesScript.maxY;
+        minY = screenBoundariesScript.worldBounds.yMin;
+        maxY = screenBoundariesScript.worldBounds.yMax;
 
         InvokeRepeating(nameof(SpawnCloud), 0f, cloudSpawnInterval);
         InvokeRepeating(nameof(SpawnPlain), 0f, plainSpawnInterval);

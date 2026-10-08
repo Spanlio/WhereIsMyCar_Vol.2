@@ -1,128 +1,77 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class ObjectTransformationScript : MonoBehaviour
 {
-    public GameObjectsScript gameObjectsScript;
+
+    public float rotationSpeed = 90f;
+    public float scaleSpeed = 0.5f;
+    private bool rotateCW, rotateCCW, 
+                    scaleUpY, scaleDownY,
+                    scaleUpX, scaleDownX;
+    public static bool isTransforming = false;
 
     void Awake()
     {
-        gameObjectsScript = FindFirstObjectByType<GameObjectsScript>();
+        
     }
 
     void Update()
     {
         if (GameObjectsScript.lastDragged == null)
+        {
             return;
-
-        RectTransform rect =
-            GameObjectsScript.lastDragged.GetComponent<RectTransform>();
-
-        if (rect == null)
-            return;
-
-        // Rotate counter-clockwise
-        if (Input.GetKey(KeyCode.Z))
-        {
-            rect.Rotate(
-                0f,
-                0f,
-                Time.deltaTime * 12f
-            );
         }
 
-        // Rotate clockwise
-        if (Input.GetKey(KeyCode.X))
+        RectTransform rc = GameObjectsScript.lastDragged.GetComponent<RectTransform>();
+        //rotation
+        if (rotateCW)
         {
-            rect.Rotate(
-                0f,
-                0f,
-                -Time.deltaTime * 12f
-            );
+            rc.Rotate(0, 0, -rotationSpeed * Time.deltaTime);
         }
 
-        // Increase/decrease HEIGHT
-        // Mathf.Abs() makes this work whether the object
-        // is normally oriented or flipped.
-        if (Input.GetKey(KeyCode.UpArrow))
+        if (rotateCCW)
         {
-            if (Mathf.Abs(rect.localScale.y) < 0.9f)
-            {
-                float sign = Mathf.Sign(rect.localScale.y);
-
-                if (sign == 0f)
-                    sign = 1f;
-
-                rect.localScale = new Vector3(
-                    rect.localScale.x,
-                    sign * (Mathf.Abs(rect.localScale.y) + 0.001f),
-                    rect.localScale.z
-                );
-            }
+            rc.Rotate(0, 0, rotationSpeed * Time.deltaTime);
+        }
+        //===================== y scale ===================
+        if (scaleUpY && rc.localScale.y < 0.9)
+        {
+            rc.localScale += new Vector3(0, scaleSpeed * Time.deltaTime, 0);
         }
 
-        if (Input.GetKey(KeyCode.DownArrow))
+        if (scaleDownY && rc.localScale.y < 0.9)
         {
-            if (Mathf.Abs(rect.localScale.y) > 0.3f)
-            {
-                float sign = Mathf.Sign(rect.localScale.y);
-
-                if (sign == 0f)
-                    sign = 1f;
-
-                rect.localScale = new Vector3(
-                    rect.localScale.x,
-                    sign * (Mathf.Abs(rect.localScale.y) - 0.001f),
-                    rect.localScale.z
-                );
-            }
+            rc.localScale -= new Vector3(0, scaleSpeed * Time.deltaTime, 0);
+        }
+        // =================== x scale =====================
+        if (scaleUpX && rc.localScale.x < 0.9)
+        {
+            rc.localScale += new Vector3(scaleSpeed * Time.deltaTime, 0, 0);
         }
 
-        // Increase/decrease WIDTH
-        // This specifically handles the negative X produced
-        // by the Spacebar flip.
-        if (Input.GetKey(KeyCode.LeftArrow))
+        if (scaleUpX && rc.localScale.x < 0.9)
         {
-            if (Mathf.Abs(rect.localScale.x) > 0.3f)
-            {
-                float sign = Mathf.Sign(rect.localScale.x);
-
-                if (sign == 0f)
-                    sign = 1f;
-
-                rect.localScale = new Vector3(
-                    sign * (Mathf.Abs(rect.localScale.x) - 0.001f),
-                    rect.localScale.y,
-                    rect.localScale.z
-                );
-            }
+            rc.localScale -= new Vector3(scaleSpeed * Time.deltaTime, 0, 0);
         }
 
-        if (Input.GetKey(KeyCode.RightArrow))
-        {
-            if (Mathf.Abs(rect.localScale.x) < 0.9f)
-            {
-                float sign = Mathf.Sign(rect.localScale.x);
-
-                if (sign == 0f)
-                    sign = 1f;
-
-                rect.localScale = new Vector3(
-                    sign * (Mathf.Abs(rect.localScale.x) + 0.001f),
-                    rect.localScale.y,
-                    rect.localScale.z
-                );
-            }
-        }
-
-        // Flip horizontally.
-        // KEEPING YOUR EXISTING BEHAVIOR.
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            rect.localScale = new Vector3(
-                -rect.localScale.x,
-                rect.localScale.y,
-                rect.localScale.z
-            );
-        }
+        isTransforming =
+            rotateCW || rotateCCW || scaleUpY || scaleDownY || scaleUpX || scaleDownX;
     }
+
+    public void StartRotateCW(BaseEventData eventData){rotateCW = true;}
+    public void StopRotateCW(BaseEventData eventData){rotateCW = false;}
+    public void StartRotateCCW(BaseEventData eventData){rotateCCW = true;}
+    public void StopRotateCCW(BaseEventData eventData){rotateCCW = false;}
+    //==================== SCALE ======================
+    //Y
+    public void StartScaleUpY(BaseEventData eventData) { scaleUpY = true;}
+    public void StopScaleUpY(BaseEventData eventData) { scaleUpY = false;}
+    public void StartScaleDownY(BaseEventData eventData) { scaleDownY = true;}
+    public void StopScaleDownY(BaseEventData eventData) { scaleDownY = false;}
+    //X
+    public void StartScaleUpX(BaseEventData eventData) { scaleUpX = true; }
+    public void StopScaleUpX(BaseEventData eventData) { scaleUpX = false; }
+    public void StartScaleDownX(BaseEventData eventData) { scaleDownX = true; }
+    public void StopScaleDownX(BaseEventData eventData) { scaleDownX = false; }
 }
