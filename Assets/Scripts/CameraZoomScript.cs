@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 public class CameraZoomScript : MonoBehaviour
 {
@@ -20,7 +21,6 @@ public class CameraZoomScript : MonoBehaviour
     public ScreenBoundariesScript screenBoundariesScript;
 
     public Camera mainCamera;
-    float startZoom;
     Vector2 lastTouchPos;
     int panFingerId = -1;
     bool isTouchPan = false;
@@ -45,9 +45,8 @@ public class CameraZoomScript : MonoBehaviour
 
     private void Start()
     {
-        startZoom = mainCamera.orthographicSize;
         screenBoundariesScript.RecalculateBounds();
-        transform.position = screenBoundariesScript.GetClampedPosition(transform.position);
+        transform.position = screenBoundariesScript.GetClampedCameraPosition(transform.position);
     }
 
     void Update()
@@ -73,7 +72,7 @@ public class CameraZoomScript : MonoBehaviour
         UpdateMaxZoom();
         mainCamera.orthographicSize = Mathf.Clamp(mainCamera.orthographicSize, minZoom, maxZoom);
         screenBoundariesScript.RecalculateBounds();
-        transform.position = screenBoundariesScript.GetClampedPosition(transform.position);
+        transform.position = screenBoundariesScript.GetClampedCameraPosition(transform.position);
     }
 
     void DesktopFollowCursor()
@@ -93,7 +92,7 @@ public class CameraZoomScript : MonoBehaviour
             Vector3.Lerp(transform.position, targetPosition, mouseFollowSpeed * Time.unscaledDeltaTime);
     }
 
-    void HandlePinch()
+    void HandleTouch()
     {
         if (Input.touchCount != 1)
             return;
@@ -135,6 +134,17 @@ public class CameraZoomScript : MonoBehaviour
         }
     }
 
+    void HandlePinch()
+    {
+        Touch touch0 = Input.GetTouch(0),
+            touch1 = Input.GetTouch(1);
+        float prevDistance =
+        ((touch0.position - touch0.deltaPosition) -
+        (touch1.position - touch1.deltaPosition)).magnitude;
+        float currentDistnace = (touch0.position - touch1.position).magnitude;
+        mainCamera.orthographicSize -= (currentDistnace - prevDistance) * pinchZoomSpeed;
+    }
+
     bool IsTouchUIButton(Vector2 touchPosition)
     {
         PointerEventData pointerData = new PointerEventData(EventSystem.current);
@@ -174,7 +184,7 @@ public class CameraZoomScript : MonoBehaviour
                 Mathf.Lerp(currentZoom, targetZoom, elapsed / duration);
             screenBoundariesScript.RecalculateBounds();
             transform.position = 
-                screenBoundariesScript.GetClampedPosition(transform.position);
+                screenBoundariesScript.GetClampedCameraPosition(transform.position);
 
             yield return null;
         }
@@ -182,7 +192,7 @@ public class CameraZoomScript : MonoBehaviour
         mainCamera.orthographicSize = targetZoom;
         screenBoundariesScript.RecalculateBounds();
         transform.position =
-            screenBoundariesScript.GetClampedPosition(transform.position);
+            screenBoundariesScript.GetClampedCameraPosition(transform.position);
     }
 
     void UpdateMaxZoom()

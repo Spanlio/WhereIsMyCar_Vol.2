@@ -4,7 +4,7 @@ public class ScreenBoundariesScript : MonoBehaviour
 {
     [HideInInspector]
     public Vector3 screenPoint, offset;
-    [HideInInspector]
+    
     public Rect worldBounds = new Rect(-10f, -5f, 20f, 10f);
     [Range(0f, 0.4f)]
     public float reductionFactor = 0.02f; //2% no ekrāna izmēra 
