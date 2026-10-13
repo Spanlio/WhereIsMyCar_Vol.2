@@ -113,10 +113,10 @@ public class DropPlaceScript : MonoBehaviour, IDropHandler
             case "Garbage": soundIndex = 1; break;
             case "Ambulance": soundIndex = 2; break;
             case "School": soundIndex = 3; break;
-            case "B2": soundIndex = 5; break;
+            case "b2": soundIndex = 5; break;
             case "CementaMasina": soundIndex = 6; break;
-            case "E46": soundIndex = 7; break;
-            case "E61": soundIndex = 8; break;
+            case "e46": soundIndex = 7; break;
+            case "e61": soundIndex = 8; break;
             case "Ekskavators": soundIndex = 9; break;
             case "Policija": soundIndex = 10; break;
             case "Traktors1": soundIndex = 11; break;

@@ -115,6 +115,7 @@ public class GameObjectsScript : MonoBehaviour
         gameTime += Time.deltaTime;
         UpdateTimerDisplay();
 
+#if UNITY_EDITOR
         // DEBUG: Instant Lose
         if (Input.GetKeyDown(KeyCode.L))
         {
@@ -128,6 +129,7 @@ public class GameObjectsScript : MonoBehaviour
             Debug.Log("DEBUG: Instant Win");
             WinGame();
         }
+#endif
     }
 
     void UpdateTimerDisplay()
@@ -197,7 +199,14 @@ public class GameObjectsScript : MonoBehaviour
         );
 
         if (destroyedCars > maxCarsBeforeDNF)
+        {
             DNFGame();
+            return;
+        }
+
+        // Destroying the last unplaced car can leave every remaining car placed.
+        if (correctlyPlacedCars.Count >= TOTAL_CARS - destroyedCars)
+            WinGame();
     }
 
     private void WinGame()

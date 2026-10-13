@@ -1,9 +1,7 @@
-using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 
 public class CameraZoomScript : MonoBehaviour
 {
@@ -45,12 +43,18 @@ public class CameraZoomScript : MonoBehaviour
 
     private void Start()
     {
+        if (screenBoundariesScript == null)
+            return;
+
         screenBoundariesScript.RecalculateBounds();
         transform.position = screenBoundariesScript.GetClampedCameraPosition(transform.position);
     }
 
     void Update()
     {
+        if (screenBoundariesScript == null)
+            return;
+
         if (ObjectTransformationScript.isTransforming)
         {
             return;
@@ -77,14 +81,18 @@ public class CameraZoomScript : MonoBehaviour
 
     void DesktopFollowCursor()
     {
-        Vector3 mousePos = Input.mousePosition;
-        if (mousePos.x < 0 || mousePos.x > Screen.width ||
-           mousePos.y < 0 || mousePos.y > Screen.width)
+        FollowScreenPoint(Input.mousePosition);
+    }
+
+    void FollowScreenPoint(Vector2 pointerPos)
+    {
+        if (pointerPos.x < 0 || pointerPos.x > Screen.width ||
+           pointerPos.y < 0 || pointerPos.y > Screen.height)
         {
             return;
         }
 
-        Vector3 screenPoint = new Vector3(mousePos.x, mousePos.y, mainCamera.nearClipPlane);
+        Vector3 screenPoint = new Vector3(pointerPos.x, pointerPos.y, mainCamera.nearClipPlane);
         Vector3 targetWorld = mainCamera.ScreenToWorldPoint(screenPoint);
         Vector3 targetPosition = new Vector3(targetWorld.x, targetWorld.y, transform.position.z);
 
@@ -96,6 +104,16 @@ public class CameraZoomScript : MonoBehaviour
     {
         if (Input.touchCount != 1)
             return;
+
+        // While a car is dragged, the camera follows the finger (like the cursor on desktop)
+        // so the car can be carried across the map on a portrait screen.
+        if (GameObjectsScript.isDragging)
+        {
+            isTouchPan = false;
+            panFingerId = -1;
+            FollowScreenPoint(Input.GetTouch(0).position);
+            return;
+        }
 
         Touch touch = Input.GetTouch(0);
         if (IsTouchUIButton(touch.position))
@@ -177,7 +195,7 @@ public class CameraZoomScript : MonoBehaviour
         float currentZoom = mainCamera.orthographicSize;
         float targetZoom = maxZoom;
 
-        while(elapsed > duration)
+        while(elapsed < duration)
         {
             elapsed += Time.unscaledDeltaTime;
             mainCamera.orthographicSize =

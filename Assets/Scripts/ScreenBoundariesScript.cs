@@ -5,7 +5,8 @@ public class ScreenBoundariesScript : MonoBehaviour
     [HideInInspector]
     public Vector3 screenPoint, offset;
     
-    public Rect worldBounds = new Rect(-10f, -5f, 20f, 10f);
+    // Matches the 1920x1080 world-space Canvas centered at the origin.
+    public Rect worldBounds = new Rect(-960f, -540f, 1920f, 1080f);
     [Range(0f, 0.4f)]
     public float reductionFactor = 0.02f; //2% no ekrāna izmēra 
 
@@ -91,7 +92,7 @@ public class ScreenBoundariesScript : MonoBehaviour
 
 
 
-            if (halfWidth * 2f >= (wbMaxY - wbMinY))
+            if (halfHeight * 2f >= (wbMaxY - wbMinY))
             {
                 minCamY = maxCamY = (wbMinY + wbMaxY) * 0.5f;
             }

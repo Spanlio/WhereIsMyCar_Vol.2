@@ -43,14 +43,14 @@ public class FlyingObjectControllerScript : MonoBehaviour
         float waveOffset = Mathf.Sin(Time.time * waveFrequency) * waveAmplitude;
         rectTransform.anchoredPosition += new Vector2(-speed * Time.deltaTime, waveOffset * Time.deltaTime);
 
-        if (speed > 0 && transform.position.x < screenBoundariesScript.worldBounds.yMin + 80 && !isFadingOut)
+        if (speed > 0 && transform.position.x < screenBoundariesScript.worldBounds.xMin + 80 && !isFadingOut)
         {
             isFadingOut = true;
             StartCoroutine(FadeOutAndDestroy());
             return;
         }
 
-        if (speed < 0 && transform.position.x > screenBoundariesScript.worldBounds.yMin - 80 && !isFadingOut)
+        if (speed < 0 && transform.position.x > screenBoundariesScript.worldBounds.xMax - 80 && !isFadingOut)
         {
             isFadingOut = true;
             StartCoroutine(FadeOutAndDestroy());
@@ -69,7 +69,8 @@ public class FlyingObjectControllerScript : MonoBehaviour
             GameObjectsScript.isDragging &&
             GameObjectsScript.lastDragged != null &&
             !isFadingOut &&
-            RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition, Camera.main))
+            TryGetInputPosition(out Vector2 inputPosition) &&
+            RectTransformUtility.RectangleContainsScreenPoint(rectTransform, inputPosition, Camera.main))
         {
             CursorCrashIntoFlyingObject();
         }
@@ -84,8 +85,8 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
         Debug.Log("Cursor hit flying object: " + gameObject.name + " with car: " + car.name);
 
-        gameObjectsScript.RegisterCarDestroyed(car);
         gameObjectsScript.LoseLife();
+        gameObjectsScript.RegisterCarDestroyed(car);
 
         GameObjectsScript.lastDragged = null;
         GameObjectsScript.isDragging = false;
@@ -106,7 +107,8 @@ public class FlyingObjectControllerScript : MonoBehaviour
     {
         if (isExploading || isFadingOut) return;
 
-        if (RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition, Camera.main))
+        if (TryGetInputPosition(out Vector2 inputPosition) &&
+            RectTransformUtility.RectangleContainsScreenPoint(rectTransform, inputPosition, Camera.main))
         {
             Debug.Log("Cursor collided with bomb.");
             TriggerExplosion();
@@ -155,8 +157,8 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
         Debug.Log("BOMB HIT DRAGGED CAR: " + car.name);
 
-        gameObjectsScript.RegisterCarDestroyed(car);
         gameObjectsScript.LoseLife();
+        gameObjectsScript.RegisterCarDestroyed(car);
 
         GameObjectsScript.lastDragged = null;
         GameObjectsScript.isDragging = false;
@@ -193,8 +195,8 @@ public class FlyingObjectControllerScript : MonoBehaviour
         {
             Debug.Log("Flying object physically hit dragged car: " + car.name);
 
-            gameObjectsScript.RegisterCarDestroyed(car);
             gameObjectsScript.LoseLife();
+            gameObjectsScript.RegisterCarDestroyed(car);
 
             GameObjectsScript.lastDragged = null;
             GameObjectsScript.isDragging = false;
@@ -386,7 +388,7 @@ public class FlyingObjectControllerScript : MonoBehaviour
         #if UNITY_EDITOR || UNITY_STANDALONE
                 inputPosition = Input.mousePosition;
                 return true;
-        #elif UNITY_ANDROID
+        #else
                 if(Input.touchCount > 0){
                     inputPosition = Input.GetTouch(0).position;
                     return true;
