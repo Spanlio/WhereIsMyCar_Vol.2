@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      towerOfHanoi_0: 4002716609882566820
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

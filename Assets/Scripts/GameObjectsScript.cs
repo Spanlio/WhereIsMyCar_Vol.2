@@ -115,21 +115,48 @@ public class GameObjectsScript : MonoBehaviour
         gameTime += Time.deltaTime;
         UpdateTimerDisplay();
 
-#if UNITY_EDITOR
-        // DEBUG: Instant Lose
-        if (Input.GetKeyDown(KeyCode.L))
+        // DEBUG: Instant Lose (L key, or 4-finger tap on a phone)
+        if (Input.GetKeyDown(KeyCode.L) || MultiFingerTap(4))
         {
             Debug.Log("DEBUG: Instant Lose");
             LoseGame();
         }
 
-        // DEBUG: Instant Win
-        if (Input.GetKeyDown(KeyCode.K))
+        // DEBUG: Instant Win (K key, or 3-finger tap on a phone)
+        else if (Input.GetKeyDown(KeyCode.K) || MultiFingerTap(3))
         {
             Debug.Log("DEBUG: Instant Win");
             WinGame();
         }
-#endif
+    }
+
+    // True on the frame the last of exactly `fingers` touches lands.
+    // Fingers rarely land in the same frame, so a 4-finger tap first
+    // passes through 3: wait until the touch count stops changing.
+    private int multiTouchCount = 0;
+    private float multiTouchTime = 0f;
+    private bool multiTouchFired = false;
+
+    private bool MultiFingerTap(int fingers)
+    {
+        int count = Input.touchCount;
+
+        if (count != multiTouchCount)
+        {
+            multiTouchCount = count;
+            multiTouchTime = Time.unscaledTime;
+            multiTouchFired = false;
+            return false;
+        }
+
+        if (count == fingers && !multiTouchFired &&
+            Time.unscaledTime - multiTouchTime >= 0.15f)
+        {
+            multiTouchFired = true;
+            return true;
+        }
+
+        return false;
     }
 
     void UpdateTimerDisplay()

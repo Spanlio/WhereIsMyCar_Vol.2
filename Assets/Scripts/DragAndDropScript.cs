@@ -136,10 +136,8 @@ public class DragAndDropScript : MonoBehaviour,
             canvasGroup.blocksRaycasts = false;
             GameObjectsScript.lastDragged = null;
         }
-        else if (!gameObjectsScript.GameFinished)
-        {
-            GameObjectsScript.lastDragged = null;
-        }
+        // Otherwise the dropped car stays selected (lastDragged) so the transform
+        // buttons still work on it. isDragging is false, so it can't collide.
 
         gameObjectsScript.inRightPlace = false;
     }

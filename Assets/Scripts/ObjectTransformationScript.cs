@@ -15,8 +15,17 @@ public class ObjectTransformationScript : MonoBehaviour
 
     void Update()
     {
+        // If a button's PointerUp never arrives (finger slid off, button hidden,
+        // wrong EventTrigger), the flag would stay on forever: the car keeps
+        // turning and the camera stays locked. No finger/mouse down = release all.
+        if (Input.touchCount == 0 && !Input.GetMouseButton(0))
+        {
+            ReleaseAllButtons();
+        }
+
         if (GameObjectsScript.lastDragged == null)
         {
+            ReleaseAllButtons();
             isTransforming = false;
             return;
         }
@@ -80,6 +89,19 @@ public class ObjectTransformationScript : MonoBehaviour
         }
 
         isTransforming = cw || ccw || upY || downY || upX || downX;
+    }
+
+    void ReleaseAllButtons()
+    {
+        rotateCW = rotateCCW = false;
+        scaleUpY = scaleDownY = false;
+        scaleUpX = scaleDownX = false;
+    }
+
+    void OnDisable()
+    {
+        ReleaseAllButtons();
+        isTransforming = false;
     }
 
     public void Flip()

@@ -20,9 +20,10 @@ public class DropPlaceScript : MonoBehaviour, IDropHandler
         if (gameObjectsScript == null || gameObjectsScript.GameFinished)
             return;
 
+        // Use the event's own button instead of Input.GetMouseButtonUp:
+        // on a phone there is no real mouse, so that check is unreliable.
         if (eventData.pointerDrag == null ||
-            !Input.GetMouseButtonUp(0) ||
-            Input.GetMouseButton(2))
+            eventData.button != PointerEventData.InputButton.Left)
             return;
 
         if (!eventData.pointerDrag.CompareTag(tag))
@@ -33,14 +34,54 @@ public class DropPlaceScript : MonoBehaviour, IDropHandler
             return;
         }
 
+        if (!TryPlaceCar(eventData.pointerDrag))
+        {
+            // Right spot, wrong rotation/size: leave the car here (it stays selected)
+            // so it can be transformed and snaps in once it matches.
+            gameObjectsScript.inRightPlace = false;
+            PlayWrongPlacementSound();
+        }
+    }
+
+    void Update()
+    {
+        if (gameObjectsScript == null || gameObjectsScript.GameFinished)
+            return;
+
+        // The selected car was dropped and is being transformed with the buttons.
+        GameObject car = GameObjectsScript.lastDragged;
+        if (car == null || GameObjectsScript.isDragging ||
+            !car.CompareTag(tag) || gameObjectsScript.IsCarCorrectlyPlaced(car))
+            return;
+
+        RectTransform placeRect = GetComponent<RectTransform>();
+        Vector2 carScreenPosition =
+            RectTransformUtility.WorldToScreenPoint(Camera.main, car.transform.position);
+        if (!RectTransformUtility.RectangleContainsScreenPoint(placeRect, carScreenPosition, Camera.main))
+            return;
+
+        if (TryPlaceCar(car))
+        {
+            // OnEndDrag already ran, so do its "placed" cleanup here.
+            CanvasGroup carCanvasGroup = car.GetComponent<CanvasGroup>();
+            if (carCanvasGroup != null)
+                carCanvasGroup.blocksRaycasts = false;
+
+            GameObjectsScript.lastDragged = null;
+            gameObjectsScript.inRightPlace = false;
+        }
+    }
+
+    private bool TryPlaceCar(GameObject car)
+    {
         RectTransform draggedRect =
-            eventData.pointerDrag.GetComponent<RectTransform>();
+            car.GetComponent<RectTransform>();
 
         RectTransform placeRect =
             GetComponent<RectTransform>();
 
         if (draggedRect == null || placeRect == null)
-            return;
+            return false;
 
         placeZRot = placeRect.eulerAngles.z;
         carZRot = draggedRect.eulerAngles.z;
@@ -54,37 +95,29 @@ public class DropPlaceScript : MonoBehaviour, IDropHandler
         xSizeDiff = Mathf.Abs(placeSize.x - carSize.x);
         ySizeDiff = Mathf.Abs(placeSize.y - carSize.y);
 
-        Debug.Log("Diff Z Rot: " + diffZRot);
-        Debug.Log("Diff X Size: " + xSizeDiff);
-        Debug.Log("Diff Y Size: " + ySizeDiff);
-
         bool correctRotation = diffZRot <= 7f;
         bool correctSize = xSizeDiff <= 0.08f && ySizeDiff <= 0.08f;
 
-        if (correctRotation && correctSize)
-        {
-            Debug.Log("Car placed correctly!");
+        if (!correctRotation || !correctSize)
+            return false;
 
-            gameObjectsScript.inRightPlace = true;
-            gameObjectsScript.RegisterCorrectPlacement(eventData.pointerDrag);
+        Debug.Log("Car placed correctly!");
 
-            // The final car can trigger WinGame(), so do not start any
-            // movement animation after the game has already ended.
-            draggedRect.anchoredPosition = placeRect.anchoredPosition;
-            draggedRect.localScale = placeRect.localScale;
-            draggedRect.localRotation = placeRect.localRotation;
+        gameObjectsScript.inRightPlace = true;
+        gameObjectsScript.RegisterCorrectPlacement(car);
 
-            PlayCorrectPlacementSound(eventData.pointerDrag.tag);
+        // The final car can trigger WinGame(), so do not start any
+        // movement animation after the game has already ended.
+        draggedRect.anchoredPosition = placeRect.anchoredPosition;
+        draggedRect.localScale = placeRect.localScale;
+        draggedRect.localRotation = placeRect.localRotation;
 
-            if (!gameObjectsScript.GameFinished)
-                StartCoroutine(CorrectPlacementBounce(draggedRect));
-        }
-        else
-        {
-            gameObjectsScript.inRightPlace = false;
-            PlayWrongPlacementSound();
-            ReturnCarToStart(eventData.pointerDrag);
-        }
+        PlayCorrectPlacementSound(car.tag);
+
+        if (!gameObjectsScript.GameFinished)
+            StartCoroutine(CorrectPlacementBounce(draggedRect));
+
+        return true;
     }
 
     private void PlayWrongPlacementSound()
