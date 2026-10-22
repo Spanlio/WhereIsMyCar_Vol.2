@@ -368,8 +368,16 @@ public class GameObjectsScript : MonoBehaviour
 
         foreach (Animator animator in animators)
         {
-            if (animator != null)
-                animator.enabled = false;
+            if (animator == null)
+                continue;
+
+            // A bomb that is already exploding finishes its animation.
+            FlyingObjectControllerScript flying =
+                animator.GetComponent<FlyingObjectControllerScript>();
+            if (flying != null && flying.IsExploding)
+                continue;
+
+            animator.enabled = false;
         }
 
         foreach (TireSpinScript tire in

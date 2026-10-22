@@ -126,28 +126,27 @@ public class FlyingObjectControllerScript : MonoBehaviour
         RectTransform carRect = car.GetComponent<RectTransform>();
         if (carRect == null) return;
 
-        Vector2 bombPosition = RectTransformUtility.WorldToScreenPoint(Camera.main, rectTransform.position);
-        Vector2 carPosition = RectTransformUtility.WorldToScreenPoint(Camera.main, carRect.position);
-
-        float bombWidth = rectTransform.rect.width * rectTransform.lossyScale.x;
-        float bombHeight = rectTransform.rect.height * rectTransform.lossyScale.y;
-        float carWidth = carRect.rect.width * carRect.lossyScale.x;
-        float carHeight = carRect.rect.height * carRect.lossyScale.y;
-
-        Rect bombRect = new Rect(
-            bombPosition.x - bombWidth * 0.5f,
-            bombPosition.y - bombHeight * 0.5f,
-            bombWidth,
-            bombHeight);
-
-        Rect carScreenRect = new Rect(
-            carPosition.x - carWidth * 0.5f,
-            carPosition.y - carHeight * 0.5f,
-            carWidth,
-            carHeight);
-
-        if (bombRect.Overlaps(carScreenRect, true))
+        if (ScreenRect(rectTransform).Overlaps(ScreenRect(carRect), true))
             HitDraggedCar(car);
+    }
+
+    // Screen-pixel rectangle of a world-space UI element. Both corners go
+    // through the camera, so this is correct at any zoom and screen size.
+    Rect ScreenRect(RectTransform rect)
+    {
+        Vector3[] corners = new Vector3[4];
+        rect.GetWorldCorners(corners);
+
+        Vector2 min = RectTransformUtility.WorldToScreenPoint(Camera.main, corners[0]);
+        Vector2 max = min;
+        for (int i = 1; i < 4; i++)
+        {
+            Vector2 p = RectTransformUtility.WorldToScreenPoint(Camera.main, corners[i]);
+            min = Vector2.Min(min, p);
+            max = Vector2.Max(max, p);
+        }
+
+        return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
     }
 
     void HitDraggedCar(GameObject car)
@@ -156,6 +155,10 @@ public class FlyingObjectControllerScript : MonoBehaviour
         hasHitDraggedCar = true;
 
         Debug.Log("BOMB HIT DRAGGED CAR: " + car.name);
+
+        // Explode first: losing the last life ends the game, and
+        // TriggerExplosion() does nothing once the game is finished.
+        TriggerExplosion();
 
         gameObjectsScript.LoseLife();
         gameObjectsScript.RegisterCarDestroyed(car);
@@ -171,10 +174,6 @@ public class FlyingObjectControllerScript : MonoBehaviour
         }
 
         Destroy(car);
-
-        // Use the real bomb explosion path instead of StartAndDestroy.
-        // This is what starts the Animator's bombExplode animation.
-        TriggerExplosion();
     }
 
     void CheckCarCollision()
@@ -193,6 +192,13 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
         if (RectTransformUtility.RectangleContainsScreenPoint(carRect, flyingObjectScreenPosition, Camera.main))
         {
+            // A bomb must explode (animation + sound), not just fade away.
+            if (CompareTag("Bomb"))
+            {
+                HitDraggedCar(car);
+                return;
+            }
+
             Debug.Log("Flying object physically hit dragged car: " + car.name);
 
             gameObjectsScript.LoseLife();
@@ -290,9 +296,11 @@ public class FlyingObjectControllerScript : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        if (gameObjectsScript != null && gameObjectsScript.GameFinished) yield break;
+        // After game over only remove the bomb itself, so the
+        // explosion animation still finishes.
+        if (gameObjectsScript == null || !gameObjectsScript.GameFinished)
+            ExplodeAndDestroyNearbyObjects(radius);
 
-        ExplodeAndDestroyNearbyObjects(radius);
         Destroy(gameObject);
     }
 
