@@ -17,6 +17,9 @@ TagManager:
   - Traktors5
   - Ugunsdzeseji
   - Bomb
+  - InterstitialAdButton
+  - RewardedAdButton
+  - BannerAdButton
   layers:
   - Default
   - TransparentFX
