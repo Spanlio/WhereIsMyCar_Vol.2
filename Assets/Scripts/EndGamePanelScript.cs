@@ -23,10 +23,11 @@ public class EndGamePanelScript : MonoBehaviour
 
     void Awake()
     {
+        // No Hide() here: the panel starts inactive, so Awake only runs when
+        // Show() activates it - hiding here would close it immediately.
+        // GameObjectsScript.Start() hides the panel at the start of the game.
         if (panel == null)
             panel = gameObject;
-
-        Hide();
     }
 
     public void Hide()

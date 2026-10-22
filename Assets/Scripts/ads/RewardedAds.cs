@@ -39,7 +39,8 @@ public class RewardedAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLi
         Debug.Log("Rewared ad loaded: " + placementId);
         if(placementId.Equals(_adUnitId))
         {
-            _rewardedAdButton.interactable = true;
+            if (_rewardedAdButton != null)
+                _rewardedAdButton.interactable = true;
         }
 
     }
@@ -47,7 +48,8 @@ public class RewardedAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLi
     public void ShowAd()
     {
         //velak jaslepj baner ad
-        _rewardedAdButton.interactable = false;
+        if (_rewardedAdButton != null)
+            _rewardedAdButton.interactable = false;
         Advertisement.Show(_adUnitId, this);
     }
 
@@ -86,7 +88,8 @@ public class RewardedAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLi
         {
             Debug.Log("Rewared ad completed");
             flyingObjectManager.DestroyAllFlyingObjects();
-            _rewardedAdButton.interactable = false;
+            if (_rewardedAdButton != null)
+                _rewardedAdButton.interactable = false;
             StartCoroutine(WaitAndLoadAd(15f));
         }
         Time.timeScale = 1f;

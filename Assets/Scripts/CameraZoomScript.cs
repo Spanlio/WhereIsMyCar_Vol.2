@@ -44,8 +44,13 @@ public class CameraZoomScript : MonoBehaviour
 
     Coroutine zoomRoutine;
 
+    GameObjectsScript gameObjectsScript;
+    bool endScreenZoomStarted = false;
+
     void Awake()
     {
+        gameObjectsScript = FindFirstObjectByType<GameObjectsScript>();
+
         if (mainCamera == null)
         {
             mainCamera = GetComponent<Camera>();
@@ -70,6 +75,22 @@ public class CameraZoomScript : MonoBehaviour
     {
         if (screenBoundariesScript == null)
             return;
+
+        // Game over: zoom out to the whole map so the end panel (in the middle
+        // of the map) is fully visible, and stop following the cursor/fingers.
+        if (gameObjectsScript != null && gameObjectsScript.GameFinished)
+        {
+            if (!endScreenZoomStarted)
+            {
+                endScreenZoomStarted = true;
+                UpdateMaxZoom();
+                Vector2 center = screenBoundariesScript.worldBounds.center;
+                StopZoomRoutine();
+                zoomRoutine = StartCoroutine(ZoomSmooth(maxZoom,
+                    new Vector3(center.x, center.y, transform.position.z)));
+            }
+            return;
+        }
 
         if (ObjectTransformationScript.isTransforming)
         {

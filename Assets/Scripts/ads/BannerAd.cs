@@ -37,7 +37,8 @@ public class BannerAd : MonoBehaviour
     void OnBannerLoaded()
     {
         Debug.Log("Banner ad loaded!");
-        _bannerAdButton.interactable = true;
+        if (_bannerAdButton != null)
+            _bannerAdButton.interactable = true;
     }
 
     void OnBannerError(string message)

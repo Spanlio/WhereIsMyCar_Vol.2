@@ -87,20 +87,20 @@ public class AdManager : MonoBehaviour
         if (interstitialAd == null)
             interstitialAd = FindFirstObjectByType<InterstitialAds>();
 
-        Button interstitialButton = GameObject.FindGameObjectWithTag("InterstitialAdButton").GetComponent<Button>();
-        if (interstitialAd != null && interstitialButton != null)
+        // StartScene has no ad buttons, so every tag lookup can return null.
+        GameObject interstitialButtonObject = GameObject.FindGameObjectWithTag("InterstitialAdButton");
+        if (interstitialAd != null && interstitialButtonObject != null)
         {
-            interstitialAd.SetButton(interstitialButton);
+            interstitialAd.SetButton(interstitialButtonObject.GetComponent<Button>());
         }
 
         if(rewardedAds == null)
             rewardedAds = FindFirstObjectByType<RewardedAds>();
 
-        Button rewardedAdButton = 
-        GameObject.FindGameObjectWithTag("RewardedAdButton").GetComponent<Button>();
-        if(rewardedAds != null && rewardedAdButton != null)
+        GameObject rewardedButtonObject = GameObject.FindGameObjectWithTag("RewardedAdButton");
+        if(rewardedAds != null && rewardedButtonObject != null)
         {
-            rewardedAds.SetButton(rewardedAdButton);
+            rewardedAds.SetButton(rewardedButtonObject.GetComponent<Button>());
         }
 
         if (bannerAd == null)
@@ -110,6 +110,11 @@ public class AdManager : MonoBehaviour
         if (bannerAd != null && bannerButtonObject != null)
         {
             bannerAd.SetButton(bannerButtonObject.GetComponent<Button>());
+        }
+        else if (bannerAd != null)
+        {
+            // No banner button here (main menu): don't leave the banner on screen.
+            bannerAd.HideBannerAd();
         }
 
         if (!firstSceneLoaded)

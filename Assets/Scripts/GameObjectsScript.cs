@@ -66,6 +66,9 @@ public class GameObjectsScript : MonoBehaviour
     [Header("Shared End Game Panel")]
     public EndGamePanelScript endGamePanel;
 
+    [Tooltip("Hidden when the game ends, so only the end panel's buttons are left.")]
+    public GameObject[] hideOnGameEnd;
+
     [Tooltip("Maximum number of destroyed cars allowed before DNF. The 4th destroyed car causes DNF.")]
     public int maxCarsBeforeDNF = 3;
 
@@ -114,6 +117,11 @@ public class GameObjectsScript : MonoBehaviour
 
         gameTime += Time.deltaTime;
         UpdateTimerDisplay();
+
+        // Test shortcuts only in the Editor and Development Builds, so a player
+        // can't win or lose by accident with a 3/4-finger tap in the real game.
+        if (!Debug.isDebugBuild)
+            return;
 
         // DEBUG: Instant Lose (L key, or 4-finger tap on a phone)
         if (Input.GetKeyDown(KeyCode.L) || MultiFingerTap(4))
@@ -362,6 +370,21 @@ public class GameObjectsScript : MonoBehaviour
         {
             if (animator != null)
                 animator.enabled = false;
+        }
+
+        foreach (TireSpinScript tire in
+            FindObjectsByType<TireSpinScript>(FindObjectsSortMode.None))
+        {
+            tire.enabled = false;
+        }
+
+        if (hideOnGameEnd != null)
+        {
+            foreach (GameObject obj in hideOnGameEnd)
+            {
+                if (obj != null)
+                    obj.SetActive(false);
+            }
         }
 
         lastDragged = null;
