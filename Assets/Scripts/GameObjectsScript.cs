@@ -244,6 +244,12 @@ public class GameObjectsScript : MonoBehaviour
             WinGame();
     }
 
+    // Test key L (DevCheatsScript).
+    public void DebugWin()
+    {
+        WinGame();
+    }
+
     private void WinGame()
     {
         if (gameFinished)
