@@ -59,7 +59,19 @@ public class StartMenuScript : MonoBehaviour
 
     public void PlayGame()
     {
+        PlayCity();
+    }
+
+
+    public void PlayCity()
+    {
         SceneManager.LoadScene("CityScene");
+    }
+
+
+    public void PlayHanoi()
+    {
+        SceneManager.LoadScene("towerScene");
     }
 
 
