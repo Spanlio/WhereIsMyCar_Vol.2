@@ -106,7 +106,8 @@ public class AdManager : MonoBehaviour
         if (!turnOffBannerAds)
             bannerAd.ShowBannerAd();
 
-        if (!turnOffInterstitialAds)
+        // "No ads" from the shop only turns off this automatic one.
+        if (!turnOffInterstitialAds && !StarWallet.Owns(StarWallet.NO_ADS))
         {
             interstitialPending = true;
             TryShowInterstitial();

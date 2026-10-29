@@ -48,6 +48,7 @@ public class EndGamePanelScript : MonoBehaviour
             resultMessageText.text = "Nice work! The cars survived the chaos.";
 
         SetStars(score);
+        StarWallet.Add(Mathf.Clamp(score, 0, 3));
         Show();
     }
 
