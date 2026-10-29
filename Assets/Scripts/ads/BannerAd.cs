@@ -1,19 +1,20 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Advertisements;
-using UnityEngine.UI;
 
+// The banner is always on: it shows as soon as it loads and has no hide button.
 public class BannerAd : MonoBehaviour
 {
 
     [SerializeField] string _androidAdUnitId = "BP_Banner_Android";
     string _adUnitId;
-    [SerializeField] Button _bannerAdButton;
+    public bool isBannerLoaded = false;
     public bool isBannerVisible = false;
     [SerializeField] BannerPosition bannerPosition = BannerPosition.BOTTOM_CENTER;
     void Awake()
     {
         _adUnitId = _androidAdUnitId;
+        isBannerLoaded = false;
         isBannerVisible = false;
         Advertisement.Banner.SetPosition(bannerPosition);
     }
@@ -37,8 +38,8 @@ public class BannerAd : MonoBehaviour
     void OnBannerLoaded()
     {
         Debug.Log("Banner ad loaded!");
-        if (_bannerAdButton != null)
-            _bannerAdButton.interactable = true;
+        isBannerLoaded = true;
+        ShowBannerAd();
     }
 
     void OnBannerError(string message)
@@ -55,22 +56,18 @@ public class BannerAd : MonoBehaviour
 
     public void ShowBannerAd()
     {
-        if (isBannerVisible)
+        if (!isBannerLoaded || isBannerVisible)
+            return;
+
+        BannerOptions bannerOptions = new BannerOptions
         {
-            HideBannerAd();
-        }
-        else
-        {
-            BannerOptions bannerOptions = new BannerOptions
-            {
-                clickCallback = OnBannerClicked,
-                hideCallback = OnBannerHidden,
-                showCallback = OnBannerShown
-            };
-            Advertisement.Banner.Show(_adUnitId, bannerOptions);
-        }
+            clickCallback = OnBannerClicked,
+            hideCallback = OnBannerHidden,
+            showCallback = OnBannerShown
+        };
+        Advertisement.Banner.Show(_adUnitId, bannerOptions);
     }
-    
+
     void OnBannerClicked()
     {
         Debug.Log("User clicked on the banner ad!");
@@ -86,22 +83,5 @@ public class BannerAd : MonoBehaviour
     {
         Debug.Log("Banner ad visible!" + _adUnitId);
         isBannerVisible = true;
-    }
-
-    public void HideBannerAd()
-    {
-        Advertisement.Banner.Hide();
-        isBannerVisible = false;
-    }
-
-    public void SetButton(Button button)
-    {
-        if(button == null)
-            return;
-
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(ShowBannerAd);
-        _bannerAdButton = button;
-        _bannerAdButton.interactable = false;
     }
 }

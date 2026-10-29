@@ -2,11 +2,24 @@ using UnityEngine;
 
 public class FlyingObjectManager : MonoBehaviour
 {
+    // Reward for a watched rewarded ad in CityScene.
+    void OnEnable()
+    {
+        if (AdManager.Instance != null)
+            AdManager.Instance.rewardedAds.OnRewardEarned += DestroyAllFlyingObjects;
+    }
+
+    void OnDisable()
+    {
+        if (AdManager.Instance != null)
+            AdManager.Instance.rewardedAds.OnRewardEarned -= DestroyAllFlyingObjects;
+    }
+
     public void DestroyAllFlyingObjects()
     {
-        FlyingObjectControllerScript[] flyingObjects = 
+        FlyingObjectControllerScript[] flyingObjects =
         Object.FindObjectsByType<FlyingObjectControllerScript>(
-            FindObjectsInactive.Exclude, 
+            FindObjectsInactive.Exclude,
             FindObjectsSortMode.None);
 
         foreach (FlyingObjectControllerScript obj in flyingObjects)
@@ -24,5 +37,5 @@ public class FlyingObjectManager : MonoBehaviour
                 obj.StartAndDestroy(Color.gray);
             }
         }
-    }   
+    }
 }

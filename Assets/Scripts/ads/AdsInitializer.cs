@@ -4,12 +4,13 @@ using UnityEngine.Advertisements;
 
 public class AdsInitializer : MonoBehaviour, IUnityAdsInitializationListener
 {
-    [SerializeField] private string _androidGameId;
+    [SerializeField] private string _androidGameId = "800388717";
     [SerializeField] bool _testMode = true;
     private string _gameId;
     public event Action OnAdsInitialized;
 
-    void Awake()
+    // Start (not Awake), so AdManager has subscribed to OnAdsInitialized first.
+    void Start()
     {
         InitializeAds();
     }
@@ -19,7 +20,11 @@ public class AdsInitializer : MonoBehaviour, IUnityAdsInitializationListener
 #if UNITY_ANDROID || UNITY_EDITOR
         _gameId = _androidGameId;
 #endif
-        if (!Advertisement.isInitialized && Advertisement.isSupported)
+        if (Advertisement.isInitialized)
+        {
+            OnAdsInitialized?.Invoke();
+        }
+        else if (Advertisement.isSupported)
         {
             Advertisement.Initialize(_gameId, _testMode, this);
         }

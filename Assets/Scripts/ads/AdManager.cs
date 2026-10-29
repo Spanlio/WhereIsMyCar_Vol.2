@@ -2,12 +2,13 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+// Lives for the whole app. It's created automatically before the first scene
+// loads, so every scene (menu included) gets ads without any setup in the scene.
 public class AdManager : MonoBehaviour
 {
     public AdsInitializer adsInitializer;
     public InterstitialAds interstitialAd;
     [SerializeField] bool turnOffInterstitialAds = false;
-    private bool firstAdShown = false;
 
     public RewardedAds rewardedAds;
     [SerializeField] bool turnOffRewardedAds = false;
@@ -17,15 +18,25 @@ public class AdManager : MonoBehaviour
 
     public static AdManager Instance { get; private set; }
 
-    private bool firstSceneLoaded = false;
+    // Set on every scene load, the interstitial shows as soon as it's ready.
+    private bool interstitialPending = false;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void CreateAdManager()
+    {
+        if (Instance != null)
+            return;
+
+        GameObject adsObject = new GameObject("AdManager");
+        adsObject.AddComponent<AdsInitializer>();
+        adsObject.AddComponent<InterstitialAds>();
+        adsObject.AddComponent<RewardedAds>();
+        adsObject.AddComponent<BannerAd>();
+        adsObject.AddComponent<AdManager>();
+    }
 
     void Awake()
     {
-        if (adsInitializer == null)
-        {
-            adsInitializer = FindFirstObjectByType<AdsInitializer>();
-        }
-
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -34,42 +45,37 @@ public class AdManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        adsInitializer = GetComponent<AdsInitializer>();
+        interstitialAd = GetComponent<InterstitialAds>();
+        rewardedAds = GetComponent<RewardedAds>();
+        bannerAd = GetComponent<BannerAd>();
+
         adsInitializer.OnAdsInitialized += HandleAdsInitialized;
+        interstitialAd.OnInterstitialAdLoaded += TryShowInterstitial;
     }
 
     private void HandleAdsInitialized()
     {
         if (!turnOffInterstitialAds)
-        {
-            // Noņemam, lai pēc scēnas pārlādes nepiesakās divreiz
-            interstitialAd.OnInterstitialAdLoaded -= HandleInterstitialReady;
-            interstitialAd.OnInterstitialAdLoaded += HandleInterstitialReady;
             interstitialAd.LoadAd();
-        }
 
         if (!turnOffRewardedAds)
-        {
             rewardedAds.LoadAd();
-        }
 
         if (!turnOffBannerAds)
-        {
             bannerAd.LoadBanner();
-        }
     }
 
-    private void HandleInterstitialReady()
+    // Shows the interstitial if a scene load is waiting for one and it's loaded.
+    private void TryShowInterstitial()
     {
-        if (!firstAdShown)
-        {
-            Debug.Log("Showing interstitial ad for the first time!");
-            interstitialAd.ShowAd();
-            firstAdShown = true;
-        }
-        else
-        {
-            Debug.Log("Interstitial ad is ready to be shown again!");
-        }
+        if (!interstitialPending || !interstitialAd.isReady)
+            return;
+
+        Debug.Log("Showing interstitial ad for the scene load");
+        interstitialPending = false;
+        interstitialAd.ShowAd();
     }
 
     void OnEnable()
@@ -84,47 +90,26 @@ public class AdManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (interstitialAd == null)
-            interstitialAd = FindFirstObjectByType<InterstitialAds>();
+        // Slow motion from an interstitial in CityScene must not follow the player.
+        interstitialAd.StopSlowMotion();
 
-        // StartScene has no ad buttons, so every tag lookup can return null.
+        // Manual ad buttons are optional: only CityScene has them.
         GameObject interstitialButtonObject = GameObject.FindGameObjectWithTag("InterstitialAdButton");
-        if (interstitialAd != null && interstitialButtonObject != null)
-        {
+        if (interstitialButtonObject != null)
             interstitialAd.SetButton(interstitialButtonObject.GetComponent<Button>());
-        }
-
-        if(rewardedAds == null)
-            rewardedAds = FindFirstObjectByType<RewardedAds>();
 
         GameObject rewardedButtonObject = GameObject.FindGameObjectWithTag("RewardedAdButton");
-        if(rewardedAds != null && rewardedButtonObject != null)
-        {
+        if (rewardedButtonObject != null)
             rewardedAds.SetButton(rewardedButtonObject.GetComponent<Button>());
-        }
 
-        if (bannerAd == null)
-            bannerAd = FindFirstObjectByType<BannerAd>();
+        // The banner is always on; this only re-shows it if something hid it.
+        if (!turnOffBannerAds)
+            bannerAd.ShowBannerAd();
 
-        GameObject bannerButtonObject = GameObject.FindGameObjectWithTag("BannerAdButton");
-        if (bannerAd != null && bannerButtonObject != null)
+        if (!turnOffInterstitialAds)
         {
-            bannerAd.SetButton(bannerButtonObject.GetComponent<Button>());
+            interstitialPending = true;
+            TryShowInterstitial();
         }
-        else if (bannerAd != null)
-        {
-            // No banner button here (main menu): don't leave the banner on screen.
-            bannerAd.HideBannerAd();
-        }
-
-        if (!firstSceneLoaded)
-        {
-            firstSceneLoaded = true;
-            Debug.Log("First scene loaded!");
-            return;
-        }
-
-        Debug.Log("Scene reloaded!");
-        HandleAdsInitialized();
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Advertisements;
@@ -9,17 +10,16 @@ public class RewardedAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLi
     string _adUnitId;
 
     [SerializeField] Button _rewardedAdButton;
-    public FlyingObjectManager flyingObjectManager;
+
+    // Each scene decides what the reward is: CityScene clears the flying
+    // objects, towerScene halves the timer.
+    public event Action OnRewardEarned;
+    public bool IsReady { get; private set; }
 
 
     private void Awake()
     {
         _adUnitId = _androidAdUnitId;
-        if(flyingObjectManager == null)
-        {
-            flyingObjectManager = 
-            FindFirstObjectByType<FlyingObjectManager>();
-        }
     }
 
     public void LoadAd()
@@ -39,6 +39,7 @@ public class RewardedAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLi
         Debug.Log("Rewared ad loaded: " + placementId);
         if(placementId.Equals(_adUnitId))
         {
+            IsReady = true;
             if (_rewardedAdButton != null)
                 _rewardedAdButton.interactable = true;
         }
@@ -47,7 +48,13 @@ public class RewardedAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLi
 
     public void ShowAd()
     {
-        //velak jaslepj baner ad
+        if (!IsReady)
+        {
+            Debug.Log("Rewarded ad is not ready yet");
+            return;
+        }
+
+        IsReady = false;
         if (_rewardedAdButton != null)
             _rewardedAdButton.interactable = false;
         Advertisement.Show(_adUnitId, this);
@@ -60,13 +67,15 @@ public class RewardedAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLi
     }
     private IEnumerator WaitAndLoadAd(float delay)
     {
-        yield return new WaitForSeconds(delay);
+        // Realtime, because ads and slow motion change Time.timeScale.
+        yield return new WaitForSecondsRealtime(delay);
         LoadAd();
     }
 
     public void OnUnityAdsShowFailure(string placementId, UnityAdsShowError error, string message)
     {
         Debug.Log($"Error showing rewarded ad: {placementId} : {error.ToString()} - {message}");
+        Time.timeScale = 1f;
         StartCoroutine(WaitAndLoadAd(10f));
     }
 
@@ -83,16 +92,22 @@ public class RewardedAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLi
     public void OnUnityAdsShowComplete(string placementId,
     UnityAdsShowCompletionState showCompletionState)
     {
-        if (placementId.Equals(_adUnitId) &&
-            showCompletionState.Equals(UnityAdsShowCompletionState.COMPLETED))
+        Time.timeScale = 1f;
+
+        if (!placementId.Equals(_adUnitId))
+            return;
+
+        if (showCompletionState.Equals(UnityAdsShowCompletionState.COMPLETED))
         {
             Debug.Log("Rewared ad completed");
-            flyingObjectManager.DestroyAllFlyingObjects();
-            if (_rewardedAdButton != null)
-                _rewardedAdButton.interactable = false;
+            OnRewardEarned?.Invoke();
             StartCoroutine(WaitAndLoadAd(15f));
         }
-        Time.timeScale = 1f;
+        else
+        {
+            // A skipped ad gives no reward, but it's used up: load the next one.
+            LoadAd();
+        }
     }
 
     public void SetButton(Button button)
@@ -103,6 +118,6 @@ public class RewardedAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLi
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(ShowAd);
         _rewardedAdButton = button;
-        _rewardedAdButton.interactable = false;
+        _rewardedAdButton.interactable = IsReady;
     }
 }

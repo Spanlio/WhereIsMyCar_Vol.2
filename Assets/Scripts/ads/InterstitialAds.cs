@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Advertisements;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class InterstitialAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowListener
@@ -12,6 +13,10 @@ public class InterstitialAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsSh
     public event Action OnInterstitialAdLoaded;
     public bool isReady = false;
     [SerializeField] Button _interstitialAdButton;
+
+    // The slow motion reward only makes sense in the car game.
+    private const string SLOW_MOTION_SCENE = "CityScene";
+    private Coroutine slowMotion;
 
     void Awake()
     {
@@ -101,6 +106,7 @@ public class InterstitialAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsSh
     public void OnUnityAdsShowFailure(string placementId, UnityAdsShowError error, string message)
     {
         Debug.LogError($"Failed to show interstitial ad: {error.ToString()} - {message}");
+        Time.timeScale = 1f;
         LoadAd();
     }
 
@@ -117,18 +123,23 @@ public class InterstitialAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsSh
 
     public void OnUnityAdsShowComplete(string placementId, UnityAdsShowCompletionState showCompletionState)
     {
-        if (showCompletionState == UnityAdsShowCompletionState.COMPLETED)
-        {
-            Debug.Log("Interstitial ad completed successfully!");
-            StartCoroutine(SlowDownTimeTemporarily(30f));
-            LoadAd();
-        }
-        else
+        if (showCompletionState != UnityAdsShowCompletionState.COMPLETED)
         {
             Debug.LogWarning($"Interstitial ad was not completed: {showCompletionState.ToString()}");
             Time.timeScale = 1f;
-            LoadAd();
         }
+        else if (SceneManager.GetActiveScene().name == SLOW_MOTION_SCENE)
+        {
+            Debug.Log("Interstitial ad completed successfully!");
+            slowMotion = StartCoroutine(SlowDownTimeTemporarily(30f));
+        }
+        else
+        {
+            Debug.Log("Interstitial ad completed successfully!");
+            Time.timeScale = 1f;
+        }
+
+        LoadAd();
     }
 
     // Balva par noskatītu reklāmu - 30 sekundes laiks iet lēnāk
@@ -139,6 +150,17 @@ public class InterstitialAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsSh
         yield return new WaitForSecondsRealtime(duration);
         Time.timeScale = 1f;
         Debug.Log("Time restored to normal.");
+        slowMotion = null;
+    }
+
+    public void StopSlowMotion()
+    {
+        if (slowMotion == null)
+            return;
+
+        StopCoroutine(slowMotion);
+        slowMotion = null;
+        Time.timeScale = 1f;
     }
 
     public void SetButton(Button button)
@@ -149,6 +171,6 @@ public class InterstitialAds : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsSh
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(OnInterstitialButtonClicked);
         _interstitialAdButton = button;
-        _interstitialAdButton.interactable = false;
+        _interstitialAdButton.interactable = isReady;
     }
 }
