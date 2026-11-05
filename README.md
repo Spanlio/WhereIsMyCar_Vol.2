@@ -2,6 +2,8 @@
 
 2D Unity spēle, kurā spēlētājam jāatrod pareizā vieta katram transportlīdzeklim un jānovieto tas atbilstošajā vietā pilsētā.
 
+Sākuma izvēlnē var izvēlēties vienu no divām spēlēm: **Where Is My Car?** (Pilsētas aina) vai **Hanojas tornis** (Hanojas aina).
+
 ## Projekta ideja
 
 Spēles laukums attēlo pilsētu ar dažādām vietām, kurās iespējams novietot transportlīdzekļus.
@@ -11,6 +13,10 @@ Spēlētājam ir pieejami 12 dažādi transportlīdzekļi un 12 tiem atbilstoši
 Lai spēle katrā reizē būtu citādāka, transportlīdzekļu un galamērķu sākuma pozīcijas tiek randomizētas.
 
 Transportlīdzekļiem ir 17 iespējamie spawn punkti, no kuriem katras spēles sākumā tiek izvēlēti 12. Galamērķiem ir vēl 17 pilnīgi atsevišķi spawn punkti, no kuriem arī tiek izvēlēti 12.
+
+## Pilsētas aina
+
+<!-- Šeit pievienot Pilsētas ainas attēlus -->
 
 ## Transportlīdzekļi
 
@@ -87,6 +93,33 @@ Tas nozīmē, ka `Policija` transportlīdzeklis ir paredzēts `PolicijaVieta` ob
 | `←` | Samazināt platumu |
 | `→` | Palielināt platumu |
 | `Space` | Apgriezt horizontāli |
+| Poga `Izvēlne` | Atgriezties sākuma izvēlnē |
+
+## Hanojas aina
+
+Hanojas tornis ir loģikas spēle ar trim stabiem. Spēles sākumā visi diski atrodas uz kreisā staba, un tie jāpārvieto uz labo stabu. Vienā gājienā drīkst pārvietot vienu disku, un lielāku disku nedrīkst likt uz mazāka. Nepareizs gājiens netiek ieskaitīts. Aina vienmēr tiek rādīta horizontāli.
+
+<!-- Šeit pievienot Hanojas ainas attēlus -->
+
+### Spēles gaita
+
+Spēles sākumā jāizvēlas disku skaits: 3, 4 vai 5. Disku var vilkt ar pirkstu vai peli. Var arī pieskarties stabam, lai paceltu tā augšējo disku, un pēc tam citam stabam, lai disku tur noliktu.
+
+Spēles laikā tiek skaitīts laiks un gājieni. Pēc uzvaras var spēlēt vēlreiz, pāriet uz lielāku disku skaitu vai izvēlēties disku skaitu no jauna.
+
+### Zvaigznes
+
+Rezultātu vērtē ar 1 līdz 3 zvaigznēm. Lai iegūtu 2 vai 3 zvaigznes, jāizpilda gan gājienu, gan laika nosacījums.
+
+| Diski | ★★★ gājieni / laiks | ★★ gājieni / laiks | ★ |
+|---|---|---|---|
+| 3 | 7 / līdz 21 s | līdz 10 / līdz 42 s | Tornis pārvietots |
+| 4 | 15 / līdz 45 s | līdz 22 / līdz 90 s | Tornis pārvietots |
+| 5 | 31 / līdz 93 s | līdz 46 / līdz 186 s | Tornis pārvietots |
+
+Uzvaras ekrānā vienu reizi spēlē var noskatīties reklāmu, kas samazina rezultāta laiku uz pusi. Ja ar jauno laiku pienākas vairāk zvaigžņu, tiek pieskaitītas tikai papildu zvaigznes.
+
+Iegūtās zvaigznes uzkrājas kopā ar Pilsētas ainā nopelnītajām, un tās var tērēt sākuma izvēlnes veikalā, piemēram, Hanojas ainas debesu tēmām.
 
 ## Tehnoloģijas
 
@@ -120,6 +153,26 @@ Ierobežo transportlīdzekļu pārvietošanu spēles laukuma robežās.
 ### `CameraZoomScript`
 
 Pārvalda kameras tuvināšanu un tālināšanu.
+
+### `HanoiGameScript`
+
+Pārvalda Hanojas torņa spēli: gājienus, laiku, zvaigznes, uzvaras ekrānu un debesu tēmas.
+
+### `HanoiDiskScript`
+
+Atbild par diska pieskārienu un vilkšanu.
+
+### `HanoiPoleScript`
+
+Uztver pieskārienu stabam.
+
+### `HanoiBoardFitScript`
+
+Pielāgo spēles laukumu ekrāna izmēram.
+
+### `LandscapeOnlyScript`
+
+Hanojas ainā nofiksē horizontālu ekrāna orientāciju un, izejot no ainas, atļauj to atkal mainīt.
 
 ## Projekta struktūra
 
