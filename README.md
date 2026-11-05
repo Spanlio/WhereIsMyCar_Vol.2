@@ -2,7 +2,13 @@
 
 2D Unity spēle, kurā spēlētājam jāatrod pareizā vieta katram transportlīdzeklim un jānovieto tas atbilstošajā vietā pilsētā.
 
-Sākuma izvēlnē var izvēlēties vienu no divām spēlēm: **Where Is My Car?** (Pilsētas aina) vai **Hanojas tornis** (Hanojas aina).
+Sākuma izvēlnē var izvēlēties vienu no divām spēlēm: **Where Is My Car?** (Pilsētas aina) vai **Hanojas tornis** (Hanojas aina). Izvēlnē ir arī iestatījumi un veikals.
+
+![Sākuma izvēlne](Images/menu.png)
+
+![Veikals](Images/shop.png)
+
+![Iestatījumi](Images/settings.png)
 
 ## Projekta ideja
 
@@ -16,7 +22,9 @@ Transportlīdzekļiem ir 17 iespējamie spawn punkti, no kuriem katras spēles s
 
 ## Pilsētas aina
 
-<!-- Šeit pievienot Pilsētas ainas attēlus -->
+![Pilsētas aina spēles laikā](Images/city_game.png)
+
+![Pilsētas ainas uzvaras ekrāns](Images/city_win.png)
 
 ## Transportlīdzekļi
 
@@ -99,7 +107,11 @@ Tas nozīmē, ka `Policija` transportlīdzeklis ir paredzēts `PolicijaVieta` ob
 
 Hanojas tornis ir loģikas spēle ar trim stabiem. Spēles sākumā visi diski atrodas uz kreisā staba, un tie jāpārvieto uz labo stabu. Vienā gājienā drīkst pārvietot vienu disku, un lielāku disku nedrīkst likt uz mazāka. Nepareizs gājiens netiek ieskaitīts. Aina vienmēr tiek rādīta horizontāli.
 
-<!-- Šeit pievienot Hanojas ainas attēlus -->
+![Disku skaita izvēle](Images/hanoi_start.png)
+
+![Hanojas aina spēles laikā](Images/hanoi_game.png)
+
+![Hanojas ainas uzvaras ekrāns](Images/hanoi_win.png)
 
 ### Spēles gaita
 
