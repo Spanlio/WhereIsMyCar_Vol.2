@@ -235,7 +235,11 @@ Canvas
 
 ## Projekta statuss
 
-Projekts atrodas izstrādes procesā. Spēles galvenā mehānika, transportlīdzekļu pārvietošana, objektu pārveidošana, pareizās vietas pārbaude un nejaušā objektu izvietošana tiek izstrādāta vienotā sistēmā.
+Projekta jaunākā versija ir pieejama zarā `releases` kā Android APK fails `APK/WhereIsMyCar.apk`.
+
+Spēle ir spēlējama. Sākuma izvēlnē var izvēlēties Pilsētas ainu vai Hanojas ainu, un no abām ainām var atgriezties izvēlnē. Abās spēlēs nopelnītās zvaigznes var tērēt veikalā.
+
+Reklāmas darbojas Unity Ads testa režīmā. Nākamais solis ir gala testēšana, kas aprakstīta sadaļā TODO.
 
 ## Autors
 
