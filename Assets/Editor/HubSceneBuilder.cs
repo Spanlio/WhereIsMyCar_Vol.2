@@ -722,8 +722,35 @@ public static class HubSceneBuilder
         if (bannerButton != null)
             UnityEngine.Object.DestroyImmediate(bannerButton);
 
+        AddHomeButton();
+
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
+    }
+
+    // Only touches CityScene, unlike Build All, which also rebuilds the other scenes.
+    [MenuItem("Tools/Hub/Add City Home Button")]
+    public static void AddCityHomeButton()
+    {
+        LoadShared();
+        Scene scene = EditorSceneManager.OpenScene(CITY_SCENE, OpenSceneMode.Single);
+        AddHomeButton();
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+    }
+
+    // Same look as the Hanoi menu button, next to the ad buttons in the top left corner.
+    static void AddHomeButton()
+    {
+        Transform buttonCanvas = GameObject.Find("ButtonCanvas").transform;
+        Transform existing = buttonCanvas.Find("HomeButton");
+        if (existing != null)
+            UnityEngine.Object.DestroyImmediate(existing.gameObject);
+
+        EndGamePanelScript endPanel = UnityEngine.Object.FindFirstObjectByType<EndGamePanelScript>(FindObjectsInactive.Include);
+        Button home = TextButton("HomeButton", buttonCanvas, Vector2.zero, new Vector2(240, 90), "Izvēlne", Yellow, 44);
+        SetCorner((RectTransform)home.transform, new Vector2(0, 1), new Vector2(300, -100));
+        OnClick(home, endPanel.MainMenu);
     }
 
     static void UpdateBuildSettings()

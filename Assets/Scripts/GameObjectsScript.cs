@@ -89,6 +89,10 @@ public class GameObjectsScript : MonoBehaviour
     {
         Time.timeScale = 1f;
 
+        // Static: leaving the scene in the middle of a drag must not carry over.
+        isDragging = false;
+        lastDragged = null;
+
         lives = startingLives;
         destroyedCars = 0;
         gameTime = 0f;
